@@ -266,17 +266,16 @@ class MapDetectionService {
       if (mapKey) {
         // Calculate confidence based on text similarity
         const similarity = this.calculateTextSimilarity(detectedText, mapKey, detectionLanguage);
-        const meetsConfidence = similarity >= confidence;
         
-        console.log(`Map translation result: ${mapKey} (similarity: ${(similarity * 100).toFixed(1)}%)`);
+        console.log(`Map translation result: ${mapKey}`);
         
         return {
           success: true,
           detectedText,
           gameFinished: false,
-          mapKey: meetsConfidence ? mapKey : null,
+          mapKey: mapKey,
           confidence: similarity,
-          thresholdMet: meetsConfidence
+          thresholdMet: true
         };
       } else {
         console.log('No map match found for detected text');
@@ -359,6 +358,8 @@ class MapDetectionService {
     this.detectionInterval = setInterval(async () => {
       try {
         const result = await this.detectMap(detectionLanguage);
+
+        console.log('Detection result:', result);
 
         if (result.success && result.gameFinished) {
           await this.triggerMapDisplay("");
