@@ -80,30 +80,6 @@ class ProcessMonitor {
           };
           break;
 
-        case 'darwin': // macOS
-          command = 'ps -eo pid,comm,command';
-          parseOutput = (stdout) => {
-            return stdout
-              .split('\n')
-              .slice(1) // Skip header
-              .filter(line => line.trim())
-              .map(line => {
-                const match = line.trim().match(/^(\d+)\s+(\S+)\s+(.*)$/);
-                if (match) {
-                  const fullPath = match[2];
-                  const processName = fullPath.split('/').pop(); // Get basename
-                  return {
-                    pid: match[1],
-                    name: processName,
-                    commandLine: match[3]
-                  };
-                }
-                return null;
-              })
-              .filter(proc => proc);
-          };
-          break;
-
         case 'linux':
         default:
           // Use a more comprehensive command that gets both process name and full command

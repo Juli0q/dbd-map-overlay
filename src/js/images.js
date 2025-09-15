@@ -146,6 +146,14 @@ class Images {
         return results;
     }
 
+    getCreators() {
+        return Object.keys(this.mapDictionary);
+    }
+
+    getMapsByCreator(creator) {
+        return this.mapDictionary[creator] || {};
+    }
+
     async loadImages(){
         debugLog("images::loadImages::called");
         $("#loadingContent").text("Generating Cache");
@@ -204,6 +212,7 @@ class Images {
     }
 
     findClosestMapMatch(mapKey) {
+        if (mapKey === "") return "";
         const normalizedKey = mapKey.replace(/\\/g, '/').trim().toLowerCase();
 
         for (const key of Object.keys(this.pathLookup)) {
@@ -219,6 +228,10 @@ class Images {
         }
 
         return null;
+    }
+
+    getPathForMapKey(mapKey) {
+        return this.findClosestMapMatch(mapKey);
     }
 
 

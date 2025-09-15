@@ -4,12 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (WORKING 3)">
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (WORKING 4)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/screendetection/mapDetectionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapDetectionService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapTranslator.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapTranslator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screendetection/translations/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/translations/en.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/js/images.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/js/images.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/js/mapdetectionUi.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/js/mapdetectionUi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,17 +49,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;map-detection&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/julian/Development/Repos/IONNetwork/dbd-map-overlay&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.CommitDialog&quot;,
-    &quot;vcs.patch.to.clipboard&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "map-detection",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/home/julian/Development/Repos/IONNetwork/dbd-map-overlay",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "to.speed.mode.migration.done": "true",
+    "vcs.patch.to.clipboard": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="dbd-map-overlay" />
@@ -255,7 +259,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757942450995</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="TEMP COMMIT (WORKING 4)">
+      <option name="closed" value="true" />
+      <created>1757944086340</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1757944086340</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -269,7 +281,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="master" />
+                        <option value="map-detection" />
                       </list>
                     </value>
                   </entry>
@@ -298,6 +310,7 @@
     <MESSAGE value="TEMP COMMIT (WORKING 1)" />
     <MESSAGE value="TEMP COMMIT (WORKING 2)" />
     <MESSAGE value="TEMP COMMIT (WORKING 3)" />
-    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (WORKING 3)" />
+    <MESSAGE value="TEMP COMMIT (WORKING 4)" />
+    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (WORKING 4)" />
   </component>
 </project>

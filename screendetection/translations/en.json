@@ -1,4 +1,9 @@
 {
-  "lampkin lane": "SamoelColt/Haddonfield/Lampkin Lane",
-  "thompson house": "SamoelColt/Coldwin Farm/Thompson House"
+  "maps": {
+    "lampkin lane": "Haddonfield/Lampkin Lane",
+    "thompson house": "Coldwind Farm/Thompson House"
+  },
+  "keywords": {
+    "finish": "continue"
+  }
 }

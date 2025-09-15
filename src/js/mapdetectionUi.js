@@ -16,6 +16,82 @@ class MapDetectionUI {
         } else {
             console.warn('MapDetectionUI: Settings object not provided or invalid');
         }
+
+        // Hook into the images loadImages method to populate creator filter after images are loaded
+        this.hookIntoImagesLoading();
+    }
+
+    // Hook into the Images class to know when the dictionary is populated
+    hookIntoImagesLoading() {
+        if (!this.images) return;
+
+        // Store the original loadImages method
+        const originalLoadImages = this.images.loadImages.bind(this.images);
+        
+        // Override it to also populate our creator filter
+        this.images.loadImages = async () => {
+            const result = await originalLoadImages();
+            // After images are loaded and dictionary is populated, update our creator filter
+            await this.populateCreatorFilter();
+            return result;
+        };
+
+        // Also hook into displayImages since that's where loadImages gets called
+        const originalDisplayImages = this.images.displayImages.bind(this.images);
+        this.images.displayImages = async (filter = "") => {
+            const result = await originalDisplayImages(filter);
+            // Check if we need to populate creator filter (in case it wasn't done before)
+            if (this.shouldUpdateCreatorFilter()) {
+                await this.populateCreatorFilter();
+            }
+            return result;
+        };
+    }
+
+    // Check if we need to update the creator filter
+    shouldUpdateCreatorFilter() {
+        const creatorFilter = document.getElementById('mapCreatorFilter');
+        if (!creatorFilter) return false;
+        
+        // If we only have the default "All Creators" option and there are creators available
+        return creatorFilter.options.length === 1 && 
+               this.images && 
+               this.images.mapDictionary && 
+               Object.keys(this.images.mapDictionary).length > 0;
+    }
+
+    // Method to populate the creator filter dropdown
+    async populateCreatorFilter() {
+        const creatorFilter = document.getElementById('mapCreatorFilter');
+        if (!creatorFilter) return;
+
+        try {
+            const creators = this.images.getCreators();
+            
+            // Only populate if we have creators and the dropdown isn't already populated
+            if (creators.length === 0 || creatorFilter.options.length > 1) {
+                return;
+            }
+
+            creators.forEach(creator => {
+                const option = document.createElement('option');
+                option.value = creator;
+                option.textContent = creator;
+                creatorFilter.appendChild(option);
+            });
+
+            // Restore the saved value if any
+            if (this.settings && typeof this.settings.get === 'function') {
+                const savedCreator = await this.settings.get('mapCreatorFilter') || '';
+                if (savedCreator) {
+                    creatorFilter.value = savedCreator;
+                }
+            }
+
+            console.log('MapDetectionUI: Creator filter populated with', creators.length, 'creators');
+        } catch (error) {
+            console.error('Failed to populate creator filter:', error);
+        }
     }
 
     async initializeScreenshotBackend() {
@@ -72,6 +148,24 @@ class MapDetectionUI {
     }
 
     setupEventListeners() {
+        // Map creator filter selection
+        const creatorFilter = document.getElementById('mapCreatorFilter');
+        if (creatorFilter) {
+            creatorFilter.addEventListener('change', async (e) => {
+                if (this.settings && typeof this.settings.set === 'function') {
+                    await this.settings.set('mapCreatorFilter', e.target.value);
+                }
+                
+                // Update the main images creator select if it exists
+                const mainCreatorSelect = document.getElementById('creatorSelect');
+                if (mainCreatorSelect) {
+                    mainCreatorSelect.value = e.target.value;
+                    // Trigger the change event to update the display
+                    mainCreatorSelect.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
         // Screenshot backend selection
         const backendDropdown = document.getElementById('screenshotBackend');
         if (backendDropdown) {
@@ -312,27 +406,29 @@ class MapDetectionUI {
             if (intervalInput) intervalInput.value = detectionInterval;
             if (confidenceSlider) {
                 confidenceSlider.value = detectionConfidence;
-                if (confidenceLabel) {
-                    confidenceLabel.textContent = `${Math.round(detectionConfidence * 100)}%`;
-                }
+                if (confidenceLabel) confidenceLabel.textContent = `${Math.round(detectionConfidence * 100)}%`;
             }
             if (backendSelect) backendSelect.value = screenshotBackend;
 
-            // Auto-start detection if enabled and not in test mode
-            if (enableMapDetection && !this.testMode) {
+            // Auto-start detection if enabled
+            if (enableMapDetection) {
                 this.startContinuousDetection(false);
             }
+
         } catch (error) {
             console.error('Failed to load map detection settings:', error);
         }
     }
 
+    // Add methods for detection functionality
     async performSingleDetection() {
+        this.updateStatus('Performing single detection...', 'info');
         const language = document.getElementById('detectionLanguage')?.value || 'en';
-        this.updateStatus('Detecting...', 'info');
         
         try {
+            const creatorFilter = document.getElementById('mapCreatorFilter')?.value || '';
             const result = await this.ipcRenderer.invoke('detect-map', language);
+            
             this.displayResult(result);
         } catch (error) {
             this.displayError(`Detection failed: ${error.message}`);
@@ -447,13 +543,13 @@ class MapDetectionUI {
         }
     }
 
-    updateStatus(message, type = 'info') {
+    updateStatus(message, type) {
         const statusDiv = document.getElementById('detectionStatus');
-        if (!statusDiv) return;
-        
-        statusDiv.style.display = 'block';
-        statusDiv.className = `alert alert-${type}`;
-        statusDiv.textContent = message;
+        if (statusDiv) {
+            statusDiv.style.display = 'block';
+            statusDiv.className = `alert alert-${type}`;
+            statusDiv.textContent = message;
+        }
     }
 
     displayError(message) {
@@ -461,7 +557,4 @@ class MapDetectionUI {
     }
 }
 
-// Export the class
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MapDetectionUI;
-}
+module.exports = MapDetectionUI;
