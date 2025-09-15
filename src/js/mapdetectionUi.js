@@ -105,6 +105,27 @@ class MapDetectionUI {
             });
         }
 
+        // Process monitoring controls
+        document.getElementById('processCheckEnabled')?.addEventListener('change', async (e) => {
+            if (this.settings && typeof this.settings.set === 'function') {
+                await this.settings.set('processCheckEnabled', e.target.checked);
+            }
+        });
+
+        document.getElementById('processPattern')?.addEventListener('change', async (e) => {
+            if (this.settings && typeof this.settings.set === 'function') {
+                await this.settings.set('processPattern', e.target.value);
+            }
+        });
+
+        document.getElementById('testProcessPattern')?.addEventListener('click', async () => {
+            await this.testProcessPattern();
+        });
+
+        document.getElementById('showRunningProcesses')?.addEventListener('click', async () => {
+            await this.showRunningProcesses();
+        });
+
         // Detection controls
         document.getElementById('testDetection')?.addEventListener('click', () => {
             this.performSingleDetection();
@@ -185,6 +206,126 @@ class MapDetectionUI {
         });
     }
 
+    async testProcessPattern() {
+        const pattern = document.getElementById('processPattern')?.value || 'DeadByDaylight';
+        const resultDiv = document.getElementById('processTestResult');
+        
+        if (!resultDiv) return;
+        
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'alert alert-info';
+        resultDiv.innerHTML = 'Testing process pattern...';
+        
+        try {
+            const result = await this.ipcRenderer.invoke('check-process', pattern);
+            
+            if (result.success) {
+                resultDiv.className = result.isRunning ? 'alert alert-success' : 'alert alert-warning';
+                resultDiv.innerHTML = `
+                    <strong>Pattern:</strong> <code>${pattern}</code><br>
+                    <strong>Process ${result.isRunning ? 'found' : 'not found'}</strong>
+                    ${result.isRunning ? '<br>✅ Dead by Daylight appears to be running!' : '<br>❌ Process not detected'}
+                `;
+            } else {
+                resultDiv.className = 'alert alert-danger';
+                resultDiv.innerHTML = `
+                    <strong>Pattern test failed:</strong> ${result.error}<br>
+                    Make sure your regex pattern is valid.
+                `;
+            }
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                if (resultDiv) resultDiv.style.display = 'none';
+            }, 5000);
+            
+        } catch (error) {
+            resultDiv.className = 'alert alert-danger';
+            resultDiv.innerHTML = `<strong>Error testing pattern:</strong> ${error.message}`;
+        }
+    }
+
+    async showRunningProcesses() {
+        const listDiv = document.getElementById('runningProcessesList');
+        const contentDiv = document.getElementById('processListContent');
+        
+        if (!listDiv || !contentDiv) return;
+        
+        // Toggle visibility
+        const isVisible = listDiv.classList.contains('show');
+        
+        if (isVisible) {
+            listDiv.classList.remove('show');
+            return;
+        }
+        
+        contentDiv.innerHTML = 'Loading running processes...';
+        listDiv.classList.add('show');
+        
+        try {
+            const result = await this.ipcRenderer.invoke('get-running-processes');
+            
+            if (result.success && result.processes) {
+                const processes = result.processes.slice(0, 20); // Show first 20
+                contentDiv.innerHTML = processes.map(process => 
+                    `<div class="mb-1"><code>${process}</code></div>`
+                ).join('');
+            } else {
+                contentDiv.innerHTML = `<div class="text-danger">Failed to get processes: ${result.error || 'Unknown error'}</div>`;
+            }
+        } catch (error) {
+            contentDiv.innerHTML = `<div class="text-danger">Error: ${error.message}</div>`;
+        }
+    }
+
+    async loadSettings() {
+        if (!this.settings) return;
+
+        try {
+            // Process monitoring settings
+            const processCheckEnabled = await this.settings.get('processCheckEnabled') || false;
+            const processPattern = await this.settings.get('processPattern') || 'DeadByDaylight';
+            
+            const processCheckInput = document.getElementById('processCheckEnabled');
+            const processPatternInput = document.getElementById('processPattern');
+            
+            if (processCheckInput) processCheckInput.checked = processCheckEnabled;
+            if (processPatternInput) processPatternInput.value = processPattern;
+
+            // Existing settings
+            const enableMapDetection = await this.settings.get('enableMapDetection') || false;
+            const detectionLanguage = await this.settings.get('detectionLanguage') || 'en';
+            const detectionInterval = await this.settings.get('detectionInterval') || 5000;
+            const detectionConfidence = parseFloat(await this.settings.get('detectionConfidence') || '0.7');
+            const screenshotBackend = await this.settings.get('screenshotBackend') || 'auto';
+
+            const enableInput = document.getElementById('enableMapDetection');
+            const languageSelect = document.getElementById('detectionLanguage');
+            const intervalInput = document.getElementById('detectionInterval');
+            const confidenceSlider = document.getElementById('detectionConfidence');
+            const confidenceLabel = document.getElementById('confidenceValue');
+            const backendSelect = document.getElementById('screenshotBackend');
+
+            if (enableInput) enableInput.checked = enableMapDetection;
+            if (languageSelect) languageSelect.value = detectionLanguage;
+            if (intervalInput) intervalInput.value = detectionInterval;
+            if (confidenceSlider) {
+                confidenceSlider.value = detectionConfidence;
+                if (confidenceLabel) {
+                    confidenceLabel.textContent = `${Math.round(detectionConfidence * 100)}%`;
+                }
+            }
+            if (backendSelect) backendSelect.value = screenshotBackend;
+
+            // Auto-start detection if enabled and not in test mode
+            if (enableMapDetection && !this.testMode) {
+                this.startContinuousDetection(false);
+            }
+        } catch (error) {
+            console.error('Failed to load map detection settings:', error);
+        }
+    }
+
     async performSingleDetection() {
         const language = document.getElementById('detectionLanguage')?.value || 'en';
         this.updateStatus('Detecting...', 'info');
@@ -250,7 +391,15 @@ class MapDetectionUI {
         
         resultDiv.style.display = 'block';
         
-        if (result.success && result.mapKey) {
+        if (result.processNotRunning) {
+            // Process check is enabled but target process is not running
+            alertDiv.className = 'alert alert-info';
+            contentDiv.innerHTML = `
+                <p><strong>Target Process Not Running</strong></p>
+                <p>Detection paused - waiting for target process to start</p>
+                <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
+            `;
+        } else if (result.success && result.mapKey) {
             // Map was successfully detected and passes confidence threshold
             alertDiv.className = 'alert alert-success';
             contentDiv.innerHTML = `
@@ -299,97 +448,19 @@ class MapDetectionUI {
 
     updateStatus(message, type = 'info') {
         const statusDiv = document.getElementById('detectionStatus');
-        const contentDiv = document.getElementById('detectionStatusContent');
-        
-        if (!statusDiv || !contentDiv) return;
+        if (!statusDiv) return;
         
         statusDiv.style.display = 'block';
         statusDiv.className = `alert alert-${type}`;
-        contentDiv.textContent = message;
+        statusDiv.textContent = message;
     }
 
     displayError(message) {
-        this.updateStatus(`Error: ${message}`, 'danger');
-    }
-
-    async loadSettings() {
-        // Defensive check for settings object
-        if (!this.settings || typeof this.settings.get !== 'function') {
-            console.warn('MapDetectionUI: Cannot load settings - settings object not available');
-            this.setDefaultValues();
-            return;
-        }
-
-        try {
-            // Load settings using the settings service
-            const enabled = await this.settings.get('enableMapDetection') || false;
-            const language = await this.settings.get('detectionLanguage') || 'en';
-            const interval = await this.settings.get('detectionInterval') || '5000';
-            const confidence = await this.settings.get('detectionConfidence') || '0.7';
-            const backend = await this.settings.get('screenshotBackend') || 'auto';
-
-            // Apply settings to UI
-            const enabledCheckbox = document.getElementById('enableMapDetection');
-            if (enabledCheckbox) enabledCheckbox.checked = enabled;
-
-            const languageSelect = document.getElementById('detectionLanguage');
-            if (languageSelect) languageSelect.value = language;
-
-            const intervalSelect = document.getElementById('detectionInterval');
-            if (intervalSelect) intervalSelect.value = interval;
-
-            const confidenceSlider = document.getElementById('detectionConfidence');
-            if (confidenceSlider) {
-                confidenceSlider.value = confidence;
-                const value = Math.round(confidence * 100);
-                const confidenceValueLabel = document.getElementById('confidenceValue');
-                if (confidenceValueLabel) confidenceValueLabel.textContent = `${value}%`;
-            }
-
-            const backendSelect = document.getElementById('screenshotBackend');
-            if (backendSelect) {
-                backendSelect.value = backend;
-                // Trigger change event to ensure backend is set
-                setTimeout(async () => {
-                    try {
-                        await this.ipcRenderer.invoke('set-screenshot-backend', backend);
-                    } catch (error) {
-                        console.warn('Failed to set initial screenshot backend:', error);
-                    }
-                }, 500);
-            }
-
-            // Auto-start detection if enabled
-            if (enabled) {
-                setTimeout(() => this.startContinuousDetection(false), 1000);
-            }
-        } catch (error) {
-            console.error('MapDetectionUI: Error loading settings:', error);
-            this.setDefaultValues();
-        }
-    }
-
-    setDefaultValues() {
-        // Set default values when settings are not available
-        const enabledCheckbox = document.getElementById('enableMapDetection');
-        if (enabledCheckbox) enabledCheckbox.checked = false;
-
-        const languageSelect = document.getElementById('detectionLanguage');
-        if (languageSelect) languageSelect.value = 'en';
-
-        const intervalSelect = document.getElementById('detectionInterval');
-        if (intervalSelect) intervalSelect.value = '5000';
-
-        const confidenceSlider = document.getElementById('detectionConfidence');
-        if (confidenceSlider) {
-            confidenceSlider.value = '0.7';
-            const confidenceValueLabel = document.getElementById('confidenceValue');
-            if (confidenceValueLabel) confidenceValueLabel.textContent = '70%';
-        }
-
-        const backendSelect = document.getElementById('screenshotBackend');
-        if (backendSelect) backendSelect.value = 'auto';
+        this.updateStatus(message, 'danger');
     }
 }
 
-module.exports = MapDetectionUI;
+// Export the class
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MapDetectionUI;
+}

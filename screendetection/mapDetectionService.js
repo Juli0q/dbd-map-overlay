@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const ScreenCapture = require('./screenshotCapture');
 const OCRProcessor = require('./ocrProcessor');
 const MapTranslator = require('./mapTranslator');
+const ProcessMonitor = require('./processMonitor');
 const fs = require('fs');
 const path = require('path');
 
@@ -10,9 +11,11 @@ class MapDetectionService {
     this.screenCapture = new ScreenCapture();
     this.ocrProcessor = new OCRProcessor();
     this.mapTranslator = new MapTranslator();
+    this.processMonitor = new ProcessMonitor();
     this.isDetecting = false;
     this.detectionInterval = null;
     this.settingsPath = path.join(app.getPath('userData'), 'settings-app.json');
+    this.lastDetectedMap = null; // Track last detected map to avoid repeated displays
     
     this.setupIpcHandlers();
   }
@@ -30,6 +33,38 @@ class MapDetectionService {
       } catch (error) {
         console.error('Failed to set screenshot backend:', error);
         throw error;
+      }
+    });
+
+    // Process monitoring handlers
+    ipcMain.handle('check-process', async (event, processPattern) => {
+      try {
+        const isRunning = await this.processMonitor.isProcessRunning(processPattern);
+        return { success: true, isRunning };
+      } catch (error) {
+        console.error('Failed to check process:', error);
+        return { success: false, error: error.message, isRunning: false };
+      }
+    });
+
+    ipcMain.handle('get-running-processes', async (event) => {
+      try {
+        const processes = await this.processMonitor.getRunningProcesses();
+        return { success: true, processes };
+      } catch (error) {
+        console.error('Failed to get running processes:', error);
+        return { success: false, error: error.message, processes: [] };
+      }
+    });
+
+    // Debug handler for process detection
+    ipcMain.handle('debug-process-search', async (event, processPattern) => {
+      try {
+        const debugInfo = await this.processMonitor.debugProcessSearch(processPattern);
+        return { success: true, debugInfo };
+      } catch (error) {
+        console.error('Failed to debug process search:', error);
+        return { success: false, error: error.message };
       }
     });
 
@@ -118,8 +153,83 @@ class MapDetectionService {
     return settings[key] !== undefined ? settings[key] : defaultValue;
   }
 
+  /**
+   * Check if the target process is running based on settings
+   * @returns {Promise<boolean>}
+   */
+  async isTargetProcessRunning() {
+    const processCheckEnabled = this.getSetting('processCheckEnabled', false);
+    
+    if (!processCheckEnabled) {
+      return true; // If process checking is disabled, always allow detection
+    }
+
+    const processPattern = this.getSetting('processPattern', 'DeadByDaylight');
+    try {
+      const isRunning = await this.processMonitor.isProcessRunning(processPattern);
+      
+      // Log for debugging
+      if (process.env.DEBUG_PROCESS) {
+        console.log(`Process check: pattern="${processPattern}", running=${isRunning}`);
+      }
+      
+      return isRunning;
+    } catch (error) {
+      console.error('Error checking target process:', error);
+      // If there's an error checking processes, assume it's running to avoid blocking detection
+      return true;
+    }
+  }
+
+  /**
+   * Trigger automatic map display
+   * @param {string} mapKey - The detected map key
+   */
+  async triggerMapDisplay(mapKey) {
+    try {
+      // Don't display the same map repeatedly
+      if (this.lastDetectedMap === mapKey) {
+        return;
+      }
+
+      this.lastDetectedMap = mapKey;
+      console.log(`Auto-displaying map: ${mapKey}`);
+      
+      // Send the show-map-command event to the renderer process
+      // This mimics how hotkeys and command line work in images.js
+      if (global.mainWindow && !global.mainWindow.isDestroyed()) {
+        global.mainWindow.webContents.send('show-map-command', mapKey);
+      }
+      
+    } catch (error) {
+      console.error('Failed to trigger map display:', error);
+    }
+  }
+
+  /**
+   * Reset the last detected map (useful when stopping detection)
+   */
+  resetLastDetectedMap() {
+    this.lastDetectedMap = null;
+  }
+
   async detectMap(language = null) {
     try {
+      // Check if target process is running (if enabled)
+      const isProcessRunning = await this.isTargetProcessRunning();
+      if (!isProcessRunning) {
+        // Reset last detected map when process is not running
+        this.resetLastDetectedMap();
+        return {
+          success: true,
+          detectedText: '',
+          mapKey: null,
+          confidence: 0.0,
+          thresholdMet: false,
+          processNotRunning: true
+        };
+      }
+
       // Get detection parameters from settings
       const detectionLanguage = language || this.getSetting('detectionLanguage', 'en');
       const confidence = parseFloat(this.getSetting('detectionConfidence', '0.7'));
@@ -240,19 +350,28 @@ class MapDetectionService {
     
     console.log(`Starting continuous detection: interval=${detectionInterval}ms, language=${detectionLanguage}`);
     
+    // Reset last detected map when starting detection
+    this.resetLastDetectedMap();
+    
     this.isDetecting = true;
     this.detectionInterval = setInterval(async () => {
       try {
         const result = await this.detectMap(detectionLanguage);
+        
+        // Trigger automatic map display if a map was detected with sufficient confidence
+        if (result.success && result.mapKey && result.thresholdMet) {
+          await this.triggerMapDisplay(result.mapKey);
+          console.log(`Map detected: ${result.mapKey} (confidence: ${(result.confidence * 100).toFixed(1)}%)`);
+        }
         
         // Send result to renderer process
         if (global.mainWindow && !global.mainWindow.isDestroyed()) {
           global.mainWindow.webContents.send('map-detected', result);
         }
         
-        // Log successful detections
-        if (result.success && result.mapKey && result.thresholdMet) {
-          console.log(`Map detected: ${result.mapKey} (confidence: ${(result.confidence * 100).toFixed(1)}%)`);
+        // Optionally log when process is not running (can be disabled to reduce log spam)
+        if (result.processNotRunning) {
+          // console.log('Target process not running, skipping detection');
         }
       } catch (error) {
         console.error('Error during continuous detection:', error);
@@ -271,6 +390,8 @@ class MapDetectionService {
     
     if (this.isDetecting) {
       this.isDetecting = false;
+      // Reset last detected map when stopping detection
+      this.resetLastDetectedMap();
       console.log('Continuous map detection stopped');
     }
   }

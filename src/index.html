@@ -267,99 +267,130 @@
 
                         <!-- Map Detection Tab -->
                         <div class="tab-pane fade" id="settings-map-detection" role="tabpanel">
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="enableMapDetection">
-                                    <label class="form-check-label" for="enableMapDetection">
-                                        Enable Automatic Map Detection
+                            <!-- Existing content above this section -->
+                            
+                            <!-- Process Monitoring Section -->
+                            <div class="mb-4">
+                                <h5>Process Monitoring</h5>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="processCheckEnabled">
+                                    <label class="form-check-label" for="processCheckEnabled">
+                                        Only detect when target process is running
                                     </label>
+                                    <div class="form-text">
+                                        When enabled, map detection will only work when the specified process is running.
+                                    </div>
                                 </div>
-                                <small class="form-text text-muted">Automatically detect maps using OCR from game screenshots</small>
+                                
+                                <div class="mb-3">
+                                    <label for="processPattern" class="form-label">Process Name Pattern</label>
+                                    <input type="text" class="form-control" id="processPattern" 
+                                           placeholder="DeadByDaylight" 
+                                           title="Supports regex patterns. Example: DeadByDaylight|dbd|Dead.*Daylight">
+                                    <div class="form-text">
+                                        Process name to monitor (supports regex patterns). Examples:
+                                        <br>• <code>DeadByDaylight</code> - Exact match
+                                        <br>• <code>DeadByDaylight|dbd</code> - Multiple options
+                                        <br>• <code>Dead.*Daylight</code> - Wildcard pattern
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2 mb-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="testProcessPattern">
+                                        Test Pattern
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="showRunningProcesses">
+                                        Show Running Processes
+                                    </button>
+                                </div>
+                                
+                                <div id="processTestResult" class="alert" style="display: none;"></div>
+                                
+                                <div id="runningProcessesList" class="collapse">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Running Processes (first 20)</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="processListContent" class="small" style="max-height: 200px; overflow-y: auto;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <hr class="my-4">
+                            </div>
+
+                            <!-- Map Detection Settings -->
+                            <div class="mb-3">
+                                <label for="enableMapDetection" class="form-check-label">Enable Automatic Map Detection</label>
+                                <input type="checkbox" class="form-check-input" id="enableMapDetection">
+                                <div class="form-text">
+                                    Automatically detect maps from screen capture
+                                </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="screenshotBackend" class="form-label">Screenshot Method</label>
-                                <select class="form-select" id="screenshotBackend">
-                                    <option value="auto">Auto-detect (Recommended)</option>
-                                    <option value="electron">Electron (Windows/X11)</option>
-                                    <option value="spectacle">KDE Spectacle</option>
-                                    <option value="gnome-screenshot">GNOME Screenshot</option>
-                                    <option value="xfce4-screenshooter">XFCE4 Screenshooter</option>
-                                    <option value="mate-screenshot">MATE Screenshot</option>
-                                    <option value="flameshot">Flameshot</option>
-                                    <option value="import">ImageMagick Import</option>
-                                    <option value="scrot">Scrot</option>
-                                    <option value="maim">Maim</option>
-                                </select>
-                                <small class="form-text text-muted">Choose screenshot backend. Auto-detect works best for most setups.</small>
-                                <div class="mt-2">
-                                    <small class="badge bg-info text-dark" id="screenshotBackendInfo">Current: Auto-detect</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="detectionLanguage" class="form-label">Game Language</label>
+                                <label for="detectionLanguage" class="form-label">Detection Language</label>
                                 <select class="form-select" id="detectionLanguage">
                                     <option value="en">English</option>
-                                    <option value="de">German (Deutsch)</option>
-                                    <option value="fr">French (Français)</option>
-                                    <option value="es">Spanish (Español)</option>
-                                    <option value="ru">Russian (Русский)</option>
-                                    <option value="it">Italian (Italiano)</option>
-                                    <option value="pt">Portuguese (Português)</option>
-                                    <option value="ja">Japanese (日本語)</option>
-                                    <option value="ko">Korean (한국어)</option>
-                                    <option value="zh">Chinese (中文)</option>
+                                    <option value="de">German</option>
+                                    <option value="fr">French</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="ru">Russian</option>
+                                    <option value="it">Italian</option>
+                                    <option value="pt">Portuguese</option>
+                                    <option value="ja">Japanese</option>
+                                    <option value="ko">Korean</option>
+                                    <option value="zh">Chinese (Simplified)</option>
                                 </select>
-                                <small class="form-text text-muted">Select the language your Dead by Daylight is set to</small>
                             </div>
 
                             <div class="mb-3">
-                                <label for="detectionInterval" class="form-label">Detection Interval</label>
-                                <select class="form-select" id="detectionInterval">
-                                    <option value="3000">3 seconds</option>
-                                    <option value="5000" selected>5 seconds</option>
-                                    <option value="10000">10 seconds</option>
-                                    <option value="15000">15 seconds</option>
+                                <label for="detectionInterval" class="form-label">Detection Interval (ms)</label>
+                                <input type="number" class="form-control" id="detectionInterval" min="1000" max="30000" step="500" value="5000">
+                                <div class="form-text">
+                                    How often to check for map changes (1000-30000ms)
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="detectionConfidence" class="form-label">
+                                    Confidence Threshold: <span id="confidenceValue">70%</span>
+                                </label>
+                                <input type="range" class="form-range" id="detectionConfidence" min="0.1" max="1.0" step="0.05" value="0.7">
+                                <div class="form-text">
+                                    Minimum confidence required to accept a detection result
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="screenshotBackend" class="form-label">Screenshot Backend</label>
+                                <select class="form-select" id="screenshotBackend">
+                                    <option value="auto">Auto-detect (Recommended)</option>
                                 </select>
-                                <small class="form-text text-muted">How often to check for map changes</small>
+                                <div class="form-text">
+                                    <span id="screenshotBackendInfo" class="badge bg-secondary">Loading...</span>
+                                </div>
                             </div>
 
+                            <!-- Test Controls -->
                             <div class="mb-3">
-                                <label for="detectionConfidence" class="form-label">Detection Confidence</label>
-                                <input type="range" class="form-range" min="0.5" max="1.0" step="0.1" value="0.7" id="detectionConfidence">
-                                <div class="d-flex justify-content-between">
-                                    <small>Less strict</small>
-                                    <small id="confidenceValue">70%</small>
-                                    <small>More strict</small>
-                                </div>
-                                <small class="form-text text-muted">Higher values require more accurate text matches</small>
-                            </div>
-
-                            <hr>
-
-                            <div class="mb-3">
-                                <h6>Test Detection</h6>
-                                <div class="d-flex gap-2 mb-2">
-                                    <button class="btn btn-primary" id="testDetection">Test Once</button>
-                                    <button class="btn btn-success" id="startTestDetection">Start Continuous Test</button>
-                                    <button class="btn btn-danger" id="stopTestDetection" disabled>Stop Test</button>
-                                    <button class="btn btn-success" id="saveTestImage">Save test image</button>
-                                </div>
-                                <small class="form-text text-muted">Test the detection system to see if it works properly</small>
-                            </div>
-
-                            <div class="mb-3" id="detectionStatus" style="display: none;">
-                                <div class="alert alert-info">
-                                    <h6 class="alert-heading">Detection Status</h6>
-                                    <div id="detectionStatusContent">Ready...</div>
+                                <h5>Testing</h5>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-primary" id="testDetection">Single Test</button>
+                                    <button type="button" class="btn btn-secondary" id="saveTestImage">Save Test Image</button>
+                                    <button type="button" class="btn btn-success" id="startTestDetection">Start Test Mode</button>
+                                    <button type="button" class="btn btn-danger" id="stopTestDetection" disabled>Stop Test Mode</button>
                                 </div>
                             </div>
 
-                            <div class="mb-3" id="detectionResult" style="display: none;">
-                                <div class="alert" id="detectionResultAlert">
-                                    <h6 class="alert-heading">Last Detection Result</h6>
-                                    <div id="detectionResultContent">No results yet</div>
+                            <!-- Detection Status -->
+                            <div id="detectionStatus" class="alert" style="display: none;"></div>
+
+                            <!-- Detection Result -->
+                            <div id="detectionResult" style="display: none;">
+                                <div id="detectionResultAlert" class="alert">
+                                    <div id="detectionResultContent"></div>
                                 </div>
                             </div>
 
