@@ -53,9 +53,12 @@
     "cron": "^4.1.0",
     "electron-updater": "^6.6.2",
     "image-size": "^1.0.2",
+    "jimp": "^1.6.0",
     "jquery": "^3.7.0",
     "marked": "^15.0.7",
     "popper.js": "^1.16.1",
+    "screenshot-desktop": "^1.15.2",
+    "tesseract.js": "^6.0.1",
     "uuid": "^11.1.0"
   }
 }

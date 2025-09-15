@@ -153,6 +153,10 @@
                             <button class="nav-link" id="steam-deck-tab" data-bs-toggle="tab" data-bs-target="#settings-stream-deck"
                                     type="button" role="tab">Stream Deck</button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="map-detection-tab" data-bs-toggle="tab" data-bs-target="#settings-map-detection"
+                                    type="button" role="tab">Map Detection</button>
+                        </li>
                     </ul>
 
                     <div class="tab-content pt-3" id="settingsTabContent">
@@ -264,6 +268,130 @@
                                     use the command line support
                                     </a> for integration with other setups.
                                 </p>
+                            </div>
+                        </div>
+
+                        <!-- Map Detection Tab -->
+                        <div class="tab-pane fade" id="settings-map-detection" role="tabpanel">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableMapDetection">
+                                    <label class="form-check-label" for="enableMapDetection">
+                                        Enable Automatic Map Detection
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">Automatically detect maps using OCR from game screenshots</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="screenshotBackend" class="form-label">Screenshot Method</label>
+                                <select class="form-select" id="screenshotBackend">
+                                    <option value="auto">Auto-detect (Recommended)</option>
+                                    <option value="electron">Electron (Windows/X11)</option>
+                                    <option value="spectacle">KDE Spectacle</option>
+                                    <option value="gnome-screenshot">GNOME Screenshot</option>
+                                    <option value="xfce4-screenshooter">XFCE4 Screenshooter</option>
+                                    <option value="mate-screenshot">MATE Screenshot</option>
+                                    <option value="flameshot">Flameshot</option>
+                                    <option value="import">ImageMagick Import</option>
+                                    <option value="scrot">Scrot</option>
+                                    <option value="maim">Maim</option>
+                                </select>
+                                <small class="form-text text-muted">Choose screenshot backend. Auto-detect works best for most setups.</small>
+                                <div class="mt-2">
+                                    <small class="badge bg-info text-dark" id="screenshotBackendInfo">Current: Auto-detect</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="detectionLanguage" class="form-label">Game Language</label>
+                                <select class="form-select" id="detectionLanguage">
+                                    <option value="en">English</option>
+                                    <option value="de">German (Deutsch)</option>
+                                    <option value="fr">French (Français)</option>
+                                    <option value="es">Spanish (Español)</option>
+                                    <option value="ru">Russian (Русский)</option>
+                                    <option value="it">Italian (Italiano)</option>
+                                    <option value="pt">Portuguese (Português)</option>
+                                    <option value="ja">Japanese (日本語)</option>
+                                    <option value="ko">Korean (한국어)</option>
+                                    <option value="zh">Chinese (中文)</option>
+                                </select>
+                                <small class="form-text text-muted">Select the language your Dead by Daylight is set to</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="detectionInterval" class="form-label">Detection Interval</label>
+                                <select class="form-select" id="detectionInterval">
+                                    <option value="3000">3 seconds</option>
+                                    <option value="5000" selected>5 seconds</option>
+                                    <option value="10000">10 seconds</option>
+                                    <option value="15000">15 seconds</option>
+                                </select>
+                                <small class="form-text text-muted">How often to check for map changes</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="detectionConfidence" class="form-label">Detection Confidence</label>
+                                <input type="range" class="form-range" min="0.5" max="1.0" step="0.1" value="0.7" id="detectionConfidence">
+                                <div class="d-flex justify-content-between">
+                                    <small>Less strict</small>
+                                    <small id="confidenceValue">70%</small>
+                                    <small>More strict</small>
+                                </div>
+                                <small class="form-text text-muted">Higher values require more accurate text matches</small>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-3">
+                                <h6>Test Detection</h6>
+                                <div class="d-flex gap-2 mb-2">
+                                    <button class="btn btn-primary" id="testDetection">Test Once</button>
+                                    <button class="btn btn-success" id="startTestDetection">Start Continuous Test</button>
+                                    <button class="btn btn-danger" id="stopTestDetection" disabled>Stop Test</button>
+                                    <button class="btn btn-success" id="saveTestImage">Save test image</button>
+                                </div>
+                                <small class="form-text text-muted">Test the detection system to see if it works properly</small>
+                            </div>
+
+                            <div class="mb-3" id="detectionStatus" style="display: none;">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">Detection Status</h6>
+                                    <div id="detectionStatusContent">Ready...</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3" id="detectionResult" style="display: none;">
+                                <div class="alert" id="detectionResultAlert">
+                                    <h6 class="alert-heading">Last Detection Result</h6>
+                                    <div id="detectionResultContent">No results yet</div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="alert alert-info py-3 px-4 mb-4">
+                                <h6 class="alert-heading mb-2"><i class="fas fa-info-circle"></i> How it works</h6>
+                                <p class="mb-1">
+                                    The system captures screenshots of the bottom-left corner of your screen where DBD displays the map name.
+                                </p>
+                                <p class="mb-1">
+                                    It uses OCR (Optical Character Recognition) to read the text and automatically matches it to the correct map.
+                                </p>
+                                <p class="mb-0">
+                                    Make sure DBD is running in windowed or borderless windowed mode for best results.
+                                </p>
+                            </div>
+
+                            <div class="alert alert-warning py-3 px-4 mb-4">
+                                <h6 class="alert-heading mb-2"><i class="fas fa-exclamation-triangle"></i> Requirements</h6>
+                                <ul class="mb-0">
+                                    <li>Dead by Daylight must be running in windowed or borderless windowed mode</li>
+                                    <li>The map name area (bottom-left) should be clearly visible</li>
+                                    <li>Works on both Linux (X11 & Wayland) and Windows</li>
+                                    <li>Requires screen capture permissions on some systems</li>
+                                </ul>
                             </div>
                         </div>
                     </div>

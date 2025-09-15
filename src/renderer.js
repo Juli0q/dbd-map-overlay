@@ -1,4 +1,4 @@
-const {ipcRenderer} = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 const API = require("./js/api.js");
 const Settings = require("./js/settings.js");
@@ -10,6 +10,7 @@ const Images = require("./js/images.js");
 const Hotkeys = require("./js/hotkeys.js")
 const Options = require("./js/options.js");
 const StreamDeck = require("./js/streamdeck.js");
+const MapDetectionUI = require("./js/mapdetectionUi.js")
 
 let timeoutHide = null;
 ipcRenderer.on("update-message", async (event, message) => {
@@ -56,12 +57,14 @@ images.setLobby(lobby);
 
 // Wait for settings to be initialized before creating Options
 let options;
+let mapDetectionUI;
 settings.init().then(() => {
     /**
      * Options instance for managing overlay options and configurations.
      * @type {Options}
      */
     options = new Options(settings, images);
+    mapDetectionUI = new MapDetectionUI(settings);
     images.setOptions(options);
 });
 
@@ -157,3 +160,4 @@ window.deleteImage = function (img) {
     let src = input.attr("data-img");
     custom.deleteCustomMap(src);
 }
+

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="Add Stream Deck configuration support for StreamController Software">
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Juli0q&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Juli0q/dbd-map-overlay.git&quot;,
+    &quot;accountId&quot;: &quot;a7570069-aee6-499d-9b69-2a009f270767&quot;
+  }
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2zCrgvDwh73U55iK1Hhju2IuO9D" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;map-detection&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/julian/Development/Repos/IONNetwork/dbd-map-overlay&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.CommitDialog&quot;,
+    &quot;vcs.patch.to.clipboard&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="dbd-map-overlay" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="dbd-map-overlay" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="" />
+      <created>1751246010765</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1751246010765</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Add creator filter">
+      <option name="closed" value="true" />
+      <created>1751246644509</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1751246644509</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Add creator filter">
+      <option name="closed" value="true" />
+      <created>1751246680314</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1751246680314</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Update CREDITS.md with author, contributors, and asset credits">
+      <option name="closed" value="true" />
+      <created>1751552822228</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1751552822228</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Bump version to 1.2.5">
+      <option name="closed" value="true" />
+      <created>1751552833911</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1751552833912</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Add hotkey functionality">
+      <option name="closed" value="true" />
+      <created>1751552877948</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1751552877948</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Add hotkey functionality&#10;&#10;Resolves LucaFontanot/dbd-map-overlay#6">
+      <option name="closed" value="true" />
+      <created>1751555337502</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1751555337502</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add hotkey functionality&#10;&#10;Resolves LucaFontanot/dbd-map-overlay#6">
+      <option name="closed" value="true" />
+      <created>1751555401311</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1751555401311</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Remove two incorrectly added map images">
+      <option name="closed" value="true" />
+      <created>1751556449634</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1751556449634</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Implement map argument handling">
+      <option name="closed" value="true" />
+      <created>1752429462748</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1752429462748</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Implement map argument handling">
+      <option name="closed" value="true" />
+      <created>1752429467542</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1752429467542</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Implement map argument handling">
+      <option name="closed" value="true" />
+      <created>1752429700012</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1752429700012</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Allow launching with show-map argument">
+      <option name="closed" value="true" />
+      <created>1752430270893</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1752430270893</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Add Stream Deck configuration support for StreamController Software">
+      <option name="closed" value="true" />
+      <created>1752438189619</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1752438189619</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Add Stream Deck configuration support for StreamController Software">
+      <option name="closed" value="true" />
+      <created>1752438195355</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1752438195355</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Add Stream Deck configuration support for StreamController Software">
+      <option name="closed" value="true" />
+      <created>1752438603469</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1752438603469</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Add creator filter" />
+    <MESSAGE value="Update CREDITS.md with author, contributors, and asset credits" />
+    <MESSAGE value="Bump version to 1.2.5" />
+    <MESSAGE value="Add hotkey functionality" />
+    <MESSAGE value="Add hotkey functionality&#10;&#10;Resolves LucaFontanot/dbd-map-overlay#6" />
+    <MESSAGE value="Add hotkey functionality&#10;&#10;Resolves LucaFontanot/dbd-map-overlay#6" />
+    <MESSAGE value="Remove two incorrectly added map images" />
+    <MESSAGE value="Implement map argument handling" />
+    <MESSAGE value="Allow setting map via show-map argument" />
+    <MESSAGE value="Allow setting map via show-map argument" />
+    <MESSAGE value="Allow launching with show-map argument" />
+    <MESSAGE value="Add support for setting map visibility via toggle" />
+    <MESSAGE value="Add Stream Deck configuration support for StreamController Software" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Stream Deck configuration support for StreamController Software" />
+  </component>
+</project>
