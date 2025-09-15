@@ -3,11 +3,12 @@ const path = require('path')
 const fs = require("fs");
 const sizeOf = require('image-size');
 const uuid = require('uuid');
-const {autoUpdater} = require("electron-updater");
+const { autoUpdater } = require("electron-updater");
 const { randomUUID } = require('crypto');
 
 const gotLock = app.requestSingleInstanceLock();
 const debug = process.env.DEBUG === 'true';
+const MapDetectionService = require("./screendetection/mapDetectionService")
 
 let tray = null;
 
@@ -570,10 +571,21 @@ function createTray() {
     });
 }
 
+const mapDetectionService = new MapDetectionService();
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     if (gotLock) {
-        createWindow()
+        createWindow();
+        
+        global.mainWindow = win;
+        
+        try {
+            await mapDetectionService.initialize();
+            console.log('Map detection service initialized');
+        } catch (error) {
+            console.error('Failed to initialize map detection service:', error);
+        }
+        
         app.on('activate', () => {
             if (BrowserWindow.getAllWindows().length === 0) {
                 createWindow()
@@ -593,5 +605,3 @@ app.on('before-quit', () => {
         tray.destroy();
     }
 });
-
-
