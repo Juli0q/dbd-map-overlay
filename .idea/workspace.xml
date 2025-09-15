@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="Add Stream Deck configuration support for StreamController Software">
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer.js" afterDir="false" />
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (WORKING 2)">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screendetection/mapDetectionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapDetectionService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screendetection/mapTranslator.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapTranslator.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -197,7 +197,39 @@
       <option name="project" value="LOCAL" />
       <updated>1752438603469</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="TEMP COMMIT (WORKING 1)">
+      <option name="closed" value="true" />
+      <created>1757922801604</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1757922801604</updated>
+    </task>
+    <task id="LOCAL-00017" summary="TEMP COMMIT (WORKING 1)">
+      <option name="closed" value="true" />
+      <created>1757922807030</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1757922807030</updated>
+    </task>
+    <task id="LOCAL-00018" summary="TEMP COMMIT (WORKING 2)">
+      <option name="closed" value="true" />
+      <created>1757926237838</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1757926237838</updated>
+    </task>
+    <task id="LOCAL-00019" summary="TEMP COMMIT (WORKING 2)">
+      <option name="closed" value="true" />
+      <created>1757926240899</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1757926240899</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -237,6 +269,8 @@
     <MESSAGE value="Allow launching with show-map argument" />
     <MESSAGE value="Add support for setting map visibility via toggle" />
     <MESSAGE value="Add Stream Deck configuration support for StreamController Software" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add Stream Deck configuration support for StreamController Software" />
+    <MESSAGE value="TEMP COMMIT (WORKING 1)" />
+    <MESSAGE value="TEMP COMMIT (WORKING 2)" />
+    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (WORKING 2)" />
   </component>
 </project>

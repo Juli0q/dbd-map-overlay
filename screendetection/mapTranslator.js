@@ -26,26 +26,52 @@ class MapTranslator {
     const languageTranslations = this.translations.get(language);
     if (!languageTranslations) return null;
 
-    // Normalize detected text
-    const normalizedText = detectedText.toLowerCase().trim();
+    // Split the detected text into lines and also keep the full text
+    const lines = detectedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const fullText = detectedText.replace(/\n/g, ' ').trim();
     
-    // Try exact match first
-    for (const [translatedName, mapKey] of Object.entries(languageTranslations)) {
-      if (translatedName.toLowerCase() === normalizedText) {
-        return mapKey;
+    // Create array of all text variants to test
+    const textVariants = [
+      fullText,           // Full text with newlines replaced by spaces
+      ...lines           // Each individual line
+    ];
+
+    console.log('OCR text variants to test:', textVariants);
+
+    // Try exact match first on all variants
+    for (const textVariant of textVariants) {
+      const normalizedText = textVariant.toLowerCase().trim();
+      
+      for (const [translatedName, mapKey] of Object.entries(languageTranslations)) {
+        if (translatedName.toLowerCase() === normalizedText) {
+          console.log(`Exact match found: "${textVariant}" -> ${mapKey}`);
+          return mapKey;
+        }
       }
     }
 
-    // Try partial match with similarity scoring
+    // Try partial match with similarity scoring on all variants
     let bestMatch = null;
     let bestScore = 0;
+    let bestMatchText = '';
 
-    for (const [translatedName, mapKey] of Object.entries(languageTranslations)) {
-      const score = this.calculateSimilarity(normalizedText, translatedName.toLowerCase());
-      if (score > bestScore && score > 0.7) { // 70% similarity threshold
-        bestScore = score;
-        bestMatch = mapKey;
+    for (const textVariant of textVariants) {
+      const normalizedText = textVariant.toLowerCase().trim();
+      
+      if (normalizedText.length === 0) continue;
+
+      for (const [translatedName, mapKey] of Object.entries(languageTranslations)) {
+        const score = this.calculateSimilarity(normalizedText, translatedName.toLowerCase());
+        if (score > bestScore && score > 0.6) { // Lower threshold to 60% for more flexibility
+          bestScore = score;
+          bestMatch = mapKey;
+          bestMatchText = textVariant;
+        }
       }
+    }
+
+    if (bestMatch) {
+      console.log(`Best similarity match: "${bestMatchText}" -> ${bestMatch} (score: ${(bestScore * 100).toFixed(1)}%)`);
     }
 
     return bestMatch;
