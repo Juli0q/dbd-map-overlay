@@ -1,11 +1,12 @@
 // Map Detection UI Logic (without context isolation)
 class MapDetectionUI {
-    constructor(settings) {
+    constructor(settings, images) {
         this.isDetecting = false;
         this.testMode = false;
         this.ipcRenderer = require('electron').ipcRenderer;
         this.settings = settings;
         this.availableBackends = {};
+        this.images = images;
         this.setupEventListeners();
         
         // Only load settings if settings object is valid

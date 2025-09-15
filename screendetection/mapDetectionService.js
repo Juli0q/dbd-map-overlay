@@ -7,14 +7,18 @@ const fs = require('fs');
 const path = require('path');
 
 class MapDetectionService {
-  constructor() {
+  constructor(settingsManager) {
+    if (!settingsManager) {
+      throw new Error('SettingsManager is required for MapDetectionService');
+    }
+    
+    this.settings = settingsManager; // Use the injected settings manager
     this.screenCapture = new ScreenCapture();
     this.ocrProcessor = new OCRProcessor();
-    this.mapTranslator = new MapTranslator();
+    this.mapTranslator = new MapTranslator(this.settings);
     this.processMonitor = new ProcessMonitor();
     this.isDetecting = false;
     this.detectionInterval = null;
-    this.settingsPath = path.join(app.getPath('userData'), 'settings-app.json');
     this.lastDetectedMap = null; // Track last detected map to avoid repeated displays
     
     this.setupIpcHandlers();
@@ -109,11 +113,10 @@ class MapDetectionService {
     await this.ocrProcessor.initialize();
     
     // Load detection language from settings
-    const settings = this.loadSettingsSync();
-    const detectionLanguage = settings.detectionLanguage || 'en';
+    const detectionLanguage = this.settings.getSetting('detectionLanguage', 'en');
     
     // Set screenshot backend from settings
-    const screenshotBackend = settings.screenshotBackend || 'auto';
+    const screenshotBackend = this.settings.getSetting('screenshotBackend', 'auto');
     try {
       this.screenCapture.setBackend(screenshotBackend);
       console.log(`Screenshot backend initialized: ${screenshotBackend}`);
@@ -136,35 +139,18 @@ class MapDetectionService {
     console.log('Map detection service initialized');
   }
 
-  loadSettingsSync() {
-    try {
-      if (fs.existsSync(this.settingsPath)) {
-        const settingsData = fs.readFileSync(this.settingsPath, 'utf-8');
-        return JSON.parse(settingsData);
-      }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    }
-    return {};
-  }
-
-  getSetting(key, defaultValue = null) {
-    const settings = this.loadSettingsSync();
-    return settings[key] !== undefined ? settings[key] : defaultValue;
-  }
-
   /**
    * Check if the target process is running based on settings
    * @returns {Promise<boolean>}
    */
   async isTargetProcessRunning() {
-    const processCheckEnabled = this.getSetting('processCheckEnabled', false);
+    const processCheckEnabled = this.settings.getSetting('processCheckEnabled', false);
     
     if (!processCheckEnabled) {
       return true; // If process checking is disabled, always allow detection
     }
 
-    const processPattern = this.getSetting('processPattern', 'DeadByDaylight');
+    const processPattern = this.settings.getSetting('processPattern', 'DeadByDaylight');
     try {
       const isRunning = await this.processMonitor.isProcessRunning(processPattern);
       
@@ -231,8 +217,8 @@ class MapDetectionService {
       }
 
       // Get detection parameters from settings
-      const detectionLanguage = language || this.getSetting('detectionLanguage', 'en');
-      const confidence = parseFloat(this.getSetting('detectionConfidence', '0.7'));
+      const detectionLanguage = language || this.settings.getSetting('detectionLanguage', 'en');
+      const confidence = parseFloat(this.settings.getSetting('detectionConfidence', '0.7'));
 
       console.log(`Detecting map with language: ${detectionLanguage}, confidence threshold: ${confidence}`);
       
@@ -263,7 +249,7 @@ class MapDetectionService {
       }
       
       // Translate to map key
-      const mapKey = this.mapTranslator.translateToMapKey(detectedText, detectionLanguage);
+      const mapKey = await this.mapTranslator.translateToMapKey(detectedText, detectionLanguage);
       
       if (mapKey) {
         // Calculate confidence based on text similarity
@@ -345,8 +331,8 @@ class MapDetectionService {
     }
     
     // Use parameters or fall back to settings
-    const detectionInterval = interval || parseInt(this.getSetting('detectionInterval', '5000'));
-    const detectionLanguage = language || this.getSetting('detectionLanguage', 'en');
+    const detectionInterval = interval || parseInt(this.settings.getSetting('detectionInterval', '5000'));
+    const detectionLanguage = language || this.settings.getSetting('detectionLanguage', 'en');
     
     console.log(`Starting continuous detection: interval=${detectionInterval}ms, language=${detectionLanguage}`);
     

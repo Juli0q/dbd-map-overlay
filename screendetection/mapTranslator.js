@@ -2,9 +2,10 @@ const fs = require('fs').promises;
 const path = require('path');
 
 class MapTranslator {
-  constructor() {
+  constructor(settingsManager) {
     this.translations = new Map();
     this.loadedLanguages = new Set();
+    this.settings = settingsManager;
   }
 
   async loadLanguage(language) {
@@ -22,7 +23,7 @@ class MapTranslator {
     }
   }
 
-  translateToMapKey(detectedText, language) {
+  async translateToMapKey(detectedText, language) {
     const languageTranslations = this.translations.get(language);
     if (!languageTranslations) return null;
 
@@ -40,11 +41,13 @@ class MapTranslator {
     let bestMatch = null;
     let bestScore = 0;
 
+    const detectionConfidence = parseFloat(await this.settings.getSetting('detectionConfidence') || '0.7');
+
     for (const [translatedName, mapKey] of Object.entries(languageTranslations)) {
       const score = this.calculateSimilarity(normalizedText, translatedName.toLowerCase());
       console.log(score)
       console.log(normalizedText)
-      if (score > bestScore && score > 0.7) { // 70% similarity threshold
+      if (score > bestScore && score > detectionConfidence) { // 70% similarity threshold
         bestScore = score;
         bestMatch = mapKey;
       }
@@ -54,10 +57,86 @@ class MapTranslator {
   }
 
   calculateSimilarity(str1, str2) {
-    const longer = str1.length > str2.length ? str1 : str2;
-    const shorter = str1.length > str2.length ? str2 : str1;
+    // Normalize strings
+    const normalizedStr1 = str1.toLowerCase().trim();
+    const normalizedStr2 = str2.toLowerCase().trim();
     
-    if (longer.length === 0) return 1.0;
+    if (normalizedStr1.length === 0 || normalizedStr2.length === 0) return 0;
+    
+    // Check for exact substring match first
+    if (normalizedStr1.includes(normalizedStr2) || normalizedStr2.includes(normalizedStr1)) {
+      return 1.0;
+    }
+    
+    // Try consecutive word matching for better accuracy
+    const score = this.calculateConsecutiveWordMatch(normalizedStr1, normalizedStr2);
+    if (score > 0) {
+      return score;
+    }
+    
+    // Fallback to character-based similarity with shorter string normalization
+    const longer = normalizedStr1.length > normalizedStr2.length ? normalizedStr1 : normalizedStr2;
+    const shorter = normalizedStr1.length > normalizedStr2.length ? normalizedStr2 : normalizedStr1;
+    
+    const editDistance = this.levenshteinDistance(longer, shorter);
+    return Math.max(0, (shorter.length - editDistance) / shorter.length);
+  }
+
+  calculateConsecutiveWordMatch(str1, str2) {
+    // Split into words, filtering out very short words that are likely OCR artifacts
+    const words1 = str1.split(/[\s\-_]+/).filter(word => word.length >= 2);
+    const words2 = str2.split(/[\s\-_]+/).filter(word => word.length >= 2);
+    
+    if (words1.length === 0 || words2.length === 0) return 0;
+    
+    const longerWords = words1.length > words2.length ? words1 : words2;
+    const shorterWords = words1.length > words2.length ? words2 : words1;
+    
+    // Look for consecutive word matches
+    let bestConsecutiveScore = 0;
+    
+    for (let i = 0; i <= longerWords.length - shorterWords.length; i++) {
+      let consecutiveMatches = 0;
+      let totalSimilarity = 0;
+      
+      for (let j = 0; j < shorterWords.length; j++) {
+        const longWord = longerWords[i + j];
+        const shortWord = shorterWords[j];
+        
+        // Check for exact match or very close match
+        if (longWord === shortWord) {
+          consecutiveMatches++;
+          totalSimilarity += 1.0;
+        } else if (longWord.includes(shortWord) || shortWord.includes(longWord)) {
+          consecutiveMatches++;
+          totalSimilarity += 0.9;
+        } else {
+          // Allow for minor OCR errors
+          const wordSimilarity = this.calculateWordSimilarity(longWord, shortWord);
+          if (wordSimilarity > 0.7) { // High threshold for individual words
+            consecutiveMatches++;
+            totalSimilarity += wordSimilarity;
+          } else {
+            break; // Break consecutive matching
+          }
+        }
+      }
+      
+      // Score based on how many consecutive words matched
+      if (consecutiveMatches === shorterWords.length) {
+        const avgSimilarity = totalSimilarity / shorterWords.length;
+        bestConsecutiveScore = Math.max(bestConsecutiveScore, avgSimilarity * 0.95); // Slight penalty for word-based vs exact match
+      }
+    }
+    
+    return bestConsecutiveScore;
+  }
+
+  calculateWordSimilarity(word1, word2) {
+    if (word1.length === 0 || word2.length === 0) return 0;
+    
+    const longer = word1.length > word2.length ? word1 : word2;
+    const shorter = word1.length > word2.length ? word2 : word1;
     
     const editDistance = this.levenshteinDistance(longer, shorter);
     return (longer.length - editDistance) / longer.length;

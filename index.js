@@ -1,3 +1,4 @@
+
 const {app, BrowserWindow, ipcMain, globalShortcut, screen, shell, dialog, Tray, Menu } = require('electron')
 const path = require('path')
 const fs = require("fs");
@@ -8,9 +9,11 @@ const { randomUUID } = require('crypto');
 
 const gotLock = app.requestSingleInstanceLock();
 const debug = process.env.DEBUG === 'true';
+const SettingsManager = require('./settingsManager');
 const MapDetectionService = require("./screendetection/mapDetectionService")
 
 let tray = null;
+let settingsManager = null;
 
 if (!gotLock) {
   if (process.argv.length <= 1) {
@@ -98,8 +101,8 @@ function registerHotkeys(hotkeys) {
         });
 
         if (!ok) {
-            console.warn(`Failed to register “${hotkey}” (id: ${id})`);
-            sendUpdateStatusToWindow(`Failed to register “${hotkey}”`);
+            console.warn(`Failed to register "${hotkey}" (id: ${id})`);
+            sendUpdateStatusToWindow(`Failed to register "${hotkey}"`);
         }
     }
 }
@@ -289,24 +292,26 @@ function createWindow() {
         disableFaqPopup: false
     };
     ipcMain.handle('get-settings', async (event) => {
-        const userdata = app.getPath('userData');
-        const fileDir = path.join(userdata, "settings-app.json")
-        if (!fs.existsSync(fileDir)) {
-            fs.writeFileSync(fileDir, JSON.stringify(defValues))
-        }
-        s = JSON.parse(fs.readFileSync(fileDir, "utf-8"));
+        // Use the centralized settings manager
+        const allSettings = await settingsManager.getAllSettingsAsync();
+        
+        // Merge with default values for any missing settings
         for (let key in defValues) {
-            if (s[key] === undefined) {
-                s[key] = defValues[key]
+            if (allSettings[key] === undefined) {
+                allSettings[key] = defValues[key];
             }
         }
-        return s
+        
+        // Save the merged settings back to ensure defaults are persisted
+        await settingsManager.setSettings(allSettings);
+        s = allSettings;
+        
+        return allSettings;
     })
     ipcMain.handle('save-settings', async (event, settings) => {
         if (settings !== null) {
-            const userdata = app.getPath('userData');
-            const fileDir = path.join(userdata, "settings-app.json")
-            fs.writeFileSync(fileDir, JSON.stringify(settings))
+            // Use the centralized settings manager
+            await settingsManager.setSettings(settings);
             s = settings;
         }
     })
@@ -571,7 +576,11 @@ function createTray() {
     });
 }
 
-const mapDetectionService = new MapDetectionService();
+// Initialize the centralized settings manager
+settingsManager = new SettingsManager();
+
+// Initialize map detection service with settings manager
+const mapDetectionService = new MapDetectionService(settingsManager);
 
 app.whenReady().then(async () => {
     if (gotLock) {
