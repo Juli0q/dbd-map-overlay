@@ -241,7 +241,7 @@ class ScreenCapture {
     const cropOptions = {
       x: 0,
       y: Math.floor(height * 0.80),
-      w: Math.floor(width * 0.26),
+      w: Math.floor(width * 0.36),
       h: Math.floor(height * 0.15)
     };
 

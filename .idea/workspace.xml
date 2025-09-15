@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (WORKING 2)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapDetectionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapDetectionService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapTranslator.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapTranslator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screendetection/screenshotCapture.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/screenshotCapture.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screendetection/translations/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/translations/en.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -229,7 +229,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757926240899</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="TEMP COMMIT (WORKING 2)">
+      <option name="closed" value="true" />
+      <created>1757928514425</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1757928514425</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -270,6 +278,7 @@
     <MESSAGE value="Add support for setting map visibility via toggle" />
     <MESSAGE value="Add Stream Deck configuration support for StreamController Software" />
     <MESSAGE value="TEMP COMMIT (WORKING 1)" />
+    <MESSAGE value="TEMP COMMIT (WORKING 3)" />
     <MESSAGE value="TEMP COMMIT (WORKING 2)" />
     <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (WORKING 2)" />
   </component>

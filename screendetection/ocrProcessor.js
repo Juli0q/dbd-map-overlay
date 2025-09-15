@@ -15,7 +15,8 @@ class OCRProcessor {
     // Configure Tesseract for better text recognition
     await this.worker.setParameters({
       tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -\'',
-      tessedit_pageseg_mode: Tesseract.PSM.SINGLE_LINE,
+      // Changed from SINGLE_LINE to SINGLE_BLOCK to handle multiple lines
+      tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
     });
 
     this.isInitialized = true;
@@ -28,7 +29,14 @@ class OCRProcessor {
 
     try {
       const { data: { text } } = await this.worker.recognize(imageBuffer);
-      return text.trim();
+      
+      // Clean up the text and return all lines
+      const cleanedText = text
+        .trim()
+        .replace(/\n+/g, '\n') // Normalize multiple newlines to single newlines
+        .replace(/\s+/g, ' '); // Normalize multiple spaces to single spaces
+      
+      return cleanedText;
     } catch (error) {
       console.error('OCR recognition failed:', error);
       throw error;
