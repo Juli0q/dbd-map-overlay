@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (WORKING 4)">
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (WORKING 5)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapDetectionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapDetectionService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/translations/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/translations/en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/js/images.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/js/images.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/js/mapdetectionUi.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/js/mapdetectionUi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -267,7 +262,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757944086340</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="TEMP COMMIT (WORKING 5)">
+      <option name="closed" value="true" />
+      <created>1757958238718</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1757958238718</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -311,6 +314,7 @@
     <MESSAGE value="TEMP COMMIT (WORKING 2)" />
     <MESSAGE value="TEMP COMMIT (WORKING 3)" />
     <MESSAGE value="TEMP COMMIT (WORKING 4)" />
-    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (WORKING 4)" />
+    <MESSAGE value="TEMP COMMIT (WORKING 5)" />
+    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (WORKING 5)" />
   </component>
 </project>

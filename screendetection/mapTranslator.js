@@ -1,5 +1,7 @@
+
 const fs = require('fs').promises;
 const path = require('path');
+const fuzz = require('fuzzball');
 
 class MapTranslator {
   constructor(settingsManager) {
@@ -26,142 +28,124 @@ class MapTranslator {
   async isGameFinished(detectedText, language) {
     const languageTranslations = this.translations.get(language);
     if (!languageTranslations) return null;
-    const normalizedText = detectedText.toLowerCase().trim();
+
     // Get finish keyword for the language
     const finishKeyword = languageTranslations.keywords?.finish;
     if (!finishKeyword) return null;
 
-    // Try exact match first
-    if (normalizedText === finishKeyword.toLowerCase()) {
-      return true;
-    }
+    const finishConfidence = parseFloat(await this.settings.getSetting('finishConfidence') || '0.7');
+    
+    // Use fuzzy matching with multiple algorithms
+    const normalizedText = this.normalizeOCRText(detectedText);
+    const normalizedKeyword = finishKeyword.toLowerCase();
+    
+    // Try multiple fuzzy matching approaches
+    const ratioScore = fuzz.ratio(normalizedText, normalizedKeyword) / 100;
+    const partialRatio = fuzz.partial_ratio(normalizedText, normalizedKeyword) / 100;
+    const tokenSort = fuzz.token_sort_ratio(normalizedText, normalizedKeyword) / 100;
+    const tokenSet = fuzz.token_set_ratio(normalizedText, normalizedKeyword) / 100;
+    
+    // Take the best score from all methods
+    const bestScore = Math.max(ratioScore, partialRatio, tokenSort, tokenSet);
+    
+    console.log(`Finish detection scores for "${finishKeyword}":`, {
+      text: normalizedText,
+      ratio: ratioScore,
+      partial: partialRatio,
+      tokenSort: tokenSort,
+      tokenSet: tokenSet,
+      best: bestScore,
+      threshold: finishConfidence
+    });
 
-    // Try partial match with similarity scoring
-    const score = this.calculateSimilarity(normalizedText, finishKeyword.toLowerCase());
-    const finishConfidence = parseFloat(await this.settings.getSetting('finishConfidence') || '0.9');
-    console.log("Finish similarity score:", score);
-    return score >= finishConfidence; 
+    return bestScore >= finishConfidence;
   }
 
   async translateToMapKey(detectedText, language) {
     const languageTranslations = this.translations.get(language);
     if (!languageTranslations) return null;
 
-    // Normalize detected text
-    const normalizedText = detectedText.toLowerCase().trim();
-
-    // Use only the maps section for translation
     const maps = languageTranslations.maps || {};
+    const detectionConfidence = parseFloat(await this.settings.getSetting('detectionConfidence') || '0.6');
+    
+    const normalizedText = this.normalizeOCRText(detectedText);
+    
+    let bestMatch = null;
+    let bestScore = 0;
+    let bestMethod = '';
 
-    // Try exact match first
-    for (const [translatedName, mapKey] of Object.entries(maps)) {
-      if (translatedName.toLowerCase() === normalizedText) {
-        return mapKey;
+    // Try fuzzy matching against all map names
+    for (const [mapName, mapKey] of Object.entries(maps)) {
+      const normalizedMapName = mapName.toLowerCase();
+      
+      // Use multiple fuzzy matching algorithms
+      const ratioScore = fuzz.ratio(normalizedText, normalizedMapName) / 100;
+      const partialRatio = fuzz.partial_ratio(normalizedText, normalizedMapName) / 100;
+      const tokenSort = fuzz.token_sort_ratio(normalizedText, normalizedMapName) / 100;
+      const tokenSet = fuzz.token_set_ratio(normalizedText, normalizedMapName) / 100;
+      
+      // Also try matching against individual words in the map name
+      const words = normalizedMapName.split(/[\s\-_]+/).filter(word => word.length > 2);
+      let wordMatchScore = 0;
+      
+      for (const word of words) {
+        const wordRatio = fuzz.partial_ratio(normalizedText, word) / 100;
+        wordMatchScore = Math.max(wordMatchScore, wordRatio);
+      }
+      
+      // Take the best score from all methods
+      const currentBestScore = Math.max(ratioScore, partialRatio, tokenSort, tokenSet, wordMatchScore * 0.9);
+      
+      console.log(`Map matching scores for "${mapName}":`, {
+        text: normalizedText,
+        ratio: ratioScore,
+        partial: partialRatio,
+        tokenSort: tokenSort,
+        tokenSet: tokenSet,
+        wordMatch: wordMatchScore,
+        best: currentBestScore
+      });
+      
+      if (currentBestScore > bestScore && currentBestScore >= detectionConfidence) {
+        bestScore = currentBestScore;
+        bestMatch = mapKey;
+        bestMethod = currentBestScore === ratioScore ? 'ratio' : 
+                    currentBestScore === partialRatio ? 'partial' : 
+                    currentBestScore === tokenSort ? 'token_sort' : 
+                    currentBestScore === tokenSet ? 'token_set' : 'word_match';
       }
     }
 
-    // Try partial match with similarity scoring
-    let bestMatch = null;
-    let bestScore = 0;
-
-    const detectionConfidence = parseFloat(await this.settings.getSetting('detectionConfidence') || '0.7');
-
-    for (const [translatedName, mapKey] of Object.entries(maps)) {
-      const score = this.calculateSimilarity(normalizedText, translatedName.toLowerCase());
-      if (score > bestScore && score > detectionConfidence) { // 70% similarity threshold
-        bestScore = score;
-        bestMatch = mapKey;
-      }
+    if (bestMatch) {
+      console.log(`Best match: "${bestMatch}" with score ${bestScore} using method: ${bestMethod}`);
     }
 
     return bestMatch;
   }
 
+  normalizeOCRText(text) {
+    return text
+      .toLowerCase()
+      .trim()
+      // Remove common OCR artifacts
+      .replace(/[^\w\s\-]/g, ' ')  // Remove special characters except hyphens
+      .replace(/\s+/g, ' ')        // Normalize whitespace
+      .replace(/[0-9]/g, '')       // Remove numbers (often OCR noise)
+      .trim();
+  }
 
+  // Keep the old methods as fallback, but they shouldn't be needed now
   calculateSimilarity(str1, str2) {
-    // Normalize strings
-    const normalizedStr1 = str1.toLowerCase().trim();
-    const normalizedStr2 = str2.toLowerCase().trim();
-    
-    if (normalizedStr1.length === 0 || normalizedStr2.length === 0) return 0;
-    
-    // Check for exact substring match first
-    if (normalizedStr1.includes(normalizedStr2) || normalizedStr2.includes(normalizedStr1)) {
-      return 1.0;
-    }
-    
-    // Try consecutive word matching for better accuracy
-    const score = this.calculateConsecutiveWordMatch(normalizedStr1, normalizedStr2);
-    if (score > 0) {
-      return score;
-    }
-    
-    // Fallback to character-based similarity with shorter string normalization
-    const longer = normalizedStr1.length > normalizedStr2.length ? normalizedStr1 : normalizedStr2;
-    const shorter = normalizedStr1.length > normalizedStr2.length ? normalizedStr2 : normalizedStr1;
-    
-    const editDistance = this.levenshteinDistance(longer, shorter);
-    return Math.max(0, (shorter.length - editDistance) / shorter.length);
+    // Fallback to fuzzball if needed
+    return fuzz.ratio(str1, str2) / 100;
   }
 
   calculateConsecutiveWordMatch(str1, str2) {
-    // Split into words, filtering out very short words that are likely OCR artifacts
-    const words1 = str1.split(/[\s\-_]+/).filter(word => word.length >= 2);
-    const words2 = str2.split(/[\s\-_]+/).filter(word => word.length >= 2);
-    
-    if (words1.length === 0 || words2.length === 0) return 0;
-    
-    const longerWords = words1.length > words2.length ? words1 : words2;
-    const shorterWords = words1.length > words2.length ? words2 : words1;
-    
-    // Look for consecutive word matches
-    let bestConsecutiveScore = 0;
-    
-    for (let i = 0; i <= longerWords.length - shorterWords.length; i++) {
-      let consecutiveMatches = 0;
-      let totalSimilarity = 0;
-      
-      for (let j = 0; j < shorterWords.length; j++) {
-        const longWord = longerWords[i + j];
-        const shortWord = shorterWords[j];
-        
-        // Check for exact match or very close match
-        if (longWord === shortWord) {
-          consecutiveMatches++;
-          totalSimilarity += 1.0;
-        } else if (longWord.includes(shortWord) || shortWord.includes(longWord)) {
-          consecutiveMatches++;
-          totalSimilarity += 0.9;
-        } else {
-          // Allow for minor OCR errors
-          const wordSimilarity = this.calculateWordSimilarity(longWord, shortWord);
-          if (wordSimilarity > 0.7) { // High threshold for individual words
-            consecutiveMatches++;
-            totalSimilarity += wordSimilarity;
-          } else {
-            break; // Break consecutive matching
-          }
-        }
-      }
-      
-      // Score based on how many consecutive words matched
-      if (consecutiveMatches === shorterWords.length) {
-        const avgSimilarity = totalSimilarity / shorterWords.length;
-        bestConsecutiveScore = Math.max(bestConsecutiveScore, avgSimilarity * 0.95); // Slight penalty for word-based vs exact match
-      }
-    }
-    
-    return bestConsecutiveScore;
+    return fuzz.token_sort_ratio(str1, str2) / 100;
   }
 
   calculateWordSimilarity(word1, word2) {
-    if (word1.length === 0 || word2.length === 0) return 0;
-    
-    const longer = word1.length > word2.length ? word1 : word2;
-    const shorter = word1.length > word2.length ? word2 : word1;
-    
-    const editDistance = this.levenshteinDistance(longer, shorter);
-    return (longer.length - editDistance) / longer.length;
+    return fuzz.ratio(word1, word2) / 100;
   }
 
   levenshteinDistance(str1, str2) {
