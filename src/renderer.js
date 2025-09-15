@@ -64,8 +64,11 @@ settings.init().then(() => {
      * @type {Options}
      */
     options = new Options(settings, images);
-    mapDetectionUI = new MapDetectionUI(settings);
     images.setOptions(options);
+    images.init().then(() => {
+        mapDetectionUI = new MapDetectionUI(settings, images);
+    })
+    
 });
 
 
@@ -148,6 +151,19 @@ ipcRenderer.on('toggle-map', async (event) => {
         images.sendMap(images.lastMapCache, images.lastMapType)
     } else {
         images.sendMap("", images.lastMapType)
+    }
+});
+
+/**
+ * Show a specific map by its key.
+ */
+ipcRenderer.on('show-map-by-key', async (event, mapKey) => {
+    console.log("show-map-by-key", mapKey);
+    console.log(images.mapDictionary)
+    let path = images.getPathForMapKey(mapKey)
+    console.log(path)
+    if (path !== null) {
+        images.sendMap(path, "standard")
     }
 });
 

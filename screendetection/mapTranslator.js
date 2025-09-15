@@ -23,15 +23,38 @@ class MapTranslator {
     }
   }
 
+  async isGameFinished(detectedText, language) {
+    const languageTranslations = this.translations.get(language);
+    if (!languageTranslations) return null;
+    const normalizedText = detectedText.toLowerCase().trim();
+    // Get finish keyword for the language
+    const finishKeyword = languageTranslations.keywords?.finish;
+    if (!finishKeyword) return null;
+
+    // Try exact match first
+    if (normalizedText === finishKeyword.toLowerCase()) {
+      return true;
+    }
+
+    // Try partial match with similarity scoring
+    const score = this.calculateSimilarity(normalizedText, finishKeyword.toLowerCase());
+    const finishConfidence = parseFloat(await this.settings.getSetting('finishConfidence') || '0.9');
+    console.log("Finish similarity score:", score);
+    return score >= finishConfidence; 
+  }
+
   async translateToMapKey(detectedText, language) {
     const languageTranslations = this.translations.get(language);
     if (!languageTranslations) return null;
 
     // Normalize detected text
     const normalizedText = detectedText.toLowerCase().trim();
-    
+
+    // Use only the maps section for translation
+    const maps = languageTranslations.maps || {};
+
     // Try exact match first
-    for (const [translatedName, mapKey] of Object.entries(languageTranslations)) {
+    for (const [translatedName, mapKey] of Object.entries(maps)) {
       if (translatedName.toLowerCase() === normalizedText) {
         return mapKey;
       }
@@ -43,10 +66,8 @@ class MapTranslator {
 
     const detectionConfidence = parseFloat(await this.settings.getSetting('detectionConfidence') || '0.7');
 
-    for (const [translatedName, mapKey] of Object.entries(languageTranslations)) {
+    for (const [translatedName, mapKey] of Object.entries(maps)) {
       const score = this.calculateSimilarity(normalizedText, translatedName.toLowerCase());
-      console.log(score)
-      console.log(normalizedText)
       if (score > bestScore && score > detectionConfidence) { // 70% similarity threshold
         bestScore = score;
         bestMatch = mapKey;
@@ -55,6 +76,7 @@ class MapTranslator {
 
     return bestMatch;
   }
+
 
   calculateSimilarity(str1, str2) {
     // Normalize strings

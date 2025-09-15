@@ -5,6 +5,7 @@ const MapTranslator = require('./mapTranslator');
 const ProcessMonitor = require('./processMonitor');
 const fs = require('fs');
 const path = require('path');
+const { finished } = require('stream');
 
 class MapDetectionService {
   constructor(settingsManager) {
@@ -173,10 +174,6 @@ class MapDetectionService {
    */
   async triggerMapDisplay(mapKey) {
     try {
-      // Don't display the same map repeatedly
-      if (this.lastDetectedMap === mapKey) {
-        return;
-      }
 
       this.lastDetectedMap = mapKey;
       console.log(`Auto-displaying map: ${mapKey}`);
@@ -184,7 +181,7 @@ class MapDetectionService {
       // Send the show-map-command event to the renderer process
       // This mimics how hotkeys and command line work in images.js
       if (global.mainWindow && !global.mainWindow.isDestroyed()) {
-        global.mainWindow.webContents.send('show-map-command', mapKey);
+        global.mainWindow.webContents.send('show-map-by-key', mapKey);
       }
       
     } catch (error) {
@@ -208,6 +205,7 @@ class MapDetectionService {
         this.resetLastDetectedMap();
         return {
           success: true,
+          gameFinished: false,
           detectedText: '',
           mapKey: null,
           confidence: 0.0,
@@ -241,9 +239,23 @@ class MapDetectionService {
       if (!detectedText || detectedText.trim().length === 0) {
         return {
           success: true,
+          gameFinished: false,
           detectedText: '',
           mapKey: null,
           confidence: 0.0,
+          thresholdMet: false
+        };
+      }
+
+      const isFinished = await this.mapTranslator.isGameFinished(detectedText, detectionLanguage);
+      if (isFinished) {
+        console.log('Game finished detected, skipping map detection');
+        return {
+          success: true,
+          gameFinished: true,
+          detectedText,
+          mapKey: null,
+          confidence: 1.0,
           thresholdMet: false
         };
       }
@@ -261,6 +273,7 @@ class MapDetectionService {
         return {
           success: true,
           detectedText,
+          gameFinished: false,
           mapKey: meetsConfidence ? mapKey : null,
           confidence: similarity,
           thresholdMet: meetsConfidence
@@ -270,6 +283,7 @@ class MapDetectionService {
         return {
           success: true,
           detectedText,
+          gameFinished: false,
           mapKey: null,
           confidence: 0.0,
           thresholdMet: false
@@ -325,6 +339,7 @@ class MapDetectionService {
   }
 
   startContinuousDetection(interval = null, language = null) {
+    console.log('Request to start continuous detection received');
     if (this.isDetecting) {
       console.log('Detection already running');
       return;
@@ -340,13 +355,22 @@ class MapDetectionService {
     this.resetLastDetectedMap();
     
     this.isDetecting = true;
+    let creator = this.settings.getSetting('mapCreatorFilter', '');
     this.detectionInterval = setInterval(async () => {
       try {
         const result = await this.detectMap(detectionLanguage);
+
+        if (result.success && result.gameFinished) {
+          await this.triggerMapDisplay("");
+          console.log("Game finished detected, map display cleared");
+          return
+        }
         
         // Trigger automatic map display if a map was detected with sufficient confidence
         if (result.success && result.mapKey && result.thresholdMet) {
-          await this.triggerMapDisplay(result.mapKey);
+          let fullMapKey = creator + "/" + result.mapKey;
+          console.log("Full Map Key: " + fullMapKey);
+          await this.triggerMapDisplay(fullMapKey);
           console.log(`Map detected: ${result.mapKey} (confidence: ${(result.confidence * 100).toFixed(1)}%)`);
         }
         
