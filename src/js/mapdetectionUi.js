@@ -529,7 +529,7 @@ class MapDetectionUI {
             // OCR ran but no text detected
             alertDiv.className = 'alert alert-warning';
             contentDiv.innerHTML = `
-                <p><strong>No Text Detected</strong></p>
+                <p><strong>No Map Detected</strong></p>
                 <p><strong>Raw Text:</strong> "${result.detectedText || 'None'}"</p>
                 <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
             `;

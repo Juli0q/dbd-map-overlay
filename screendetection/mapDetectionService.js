@@ -250,6 +250,7 @@ class MapDetectionService {
       const isFinished = await this.mapTranslator.isGameFinished(detectedText, detectionLanguage);
       if (isFinished) {
         console.log('Game finished detected, skipping map detection');
+        this.resetLastDetectedMap();
         return {
           success: true,
           gameFinished: true,
