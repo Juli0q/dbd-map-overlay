@@ -20,6 +20,7 @@ class ScreenCapture {
     this.streamingSource = null;
     this.streamInterval = null;
     this.frameCallback = null;
+    this.selectedSourceId = null;
     
     // Screenshot backend configuration
     this.screenshotBackend = screenshotBackend;
@@ -90,12 +91,7 @@ class ScreenCapture {
     return this.streamingSource;
   }
 
-  async startScreenShare(sourceId = null, fps = 1) {
-    if (this.streamingSource) {
-        this.stopScreenShare();
-    }
-
-    // Initial source setup - only request permissions once
+  async initializeStream(sourceId = null) {
     const sources = await desktopCapturer.getSources({
         types: ['screen', 'window'],
         thumbnailSize: { width: 1280, height: 720 }
@@ -113,48 +109,87 @@ class ScreenCapture {
         throw new Error('Selected source not found');
     }
 
-    // Store source ID for refreshing
-    this.streamingSourceId = selectedSource.id;
-    this.streamingSource = selectedSource;
-    console.log(`Screen share started for: ${this.streamingSource.name}`);
-
-    const capture = async () => {
-        if (!this.streamInterval) return;
-
-        try {
-            // Only refresh the thumbnail of existing source
-            const buffer = await this.cropWithJimp(this.streamingSource.thumbnail.toPNG());
-            
-            if (this.frameCallback) {
-                this.frameCallback(buffer);
+    // Create a MediaStream once
+    const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+            mandatory: {
+                chromeMediaSource: 'desktop',
+                chromeMediaSourceId: selectedSource.id
             }
-        } catch (error) {
-            // If thumbnail is stale, refresh the source without showing permission dialog
+        }
+    });
+
+    // Create video element
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.play();
+
+    return { stream, video, sourceId: selectedSource.id };
+  }
+
+  async startScreenShare(sourceId = null, fps = 1) {
+    if (this.streamingSource) {
+        this.stopScreenShare();
+    }
+
+    try {
+        // Initialize stream once
+        const { stream, video } = await this.initializeStream(sourceId);
+        this.streamingSource = { stream, video };
+        this.streamInterval = true;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const capture = async () => {
+            if (!this.streamInterval) return;
+
             try {
-                const newSources = await desktopCapturer.getSources({
-                    types: ['screen', 'window'],
-                    thumbnailSize: { width: 1280, height: 720 }
+                // Draw current frame to canvas
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+                
+                const buffer = await new Promise(resolve => {
+                    canvas.toBlob(blob => {
+                        blob.arrayBuffer().then(buffer => resolve(Buffer.from(buffer)));
+                    }, 'image/png');
                 });
-                this.streamingSource = newSources.find(s => s.id === this.streamingSourceId) || this.streamingSource;
-            } catch (refreshError) {
-                console.error('Failed to refresh source:', refreshError);
+
+                if (this.frameCallback) {
+                    await this.frameCallback(await this.cropWithJimp(buffer));
+                }
+            } catch (error) {
+                console.error('Frame capture error:', error);
             }
-        }
 
-        // Schedule next capture
-        if (this.streamInterval) {
-            setTimeout(capture, 1000 / fps);
-        }
-    };
+            if (this.streamInterval) {
+                setTimeout(capture, 1000 / fps);
+            }
+        };
 
-    this.streamInterval = true;
-    capture();
+        // Start capture loop
+        capture();
+        console.log(`Screen share started for selected source`);
+
+    } catch (error) {
+        console.error('Failed to start stream:', error);
+        throw error;
+    }
   }
 
   stopScreenShare() {
-      this.streamInterval = false;  // Stop the animation frame loop
-      this.streamingSource = null;
-      console.log('Screen share stopped');
+    this.streamInterval = false;
+    if (this.streamingSource?.stream) {
+      this.streamingSource.stream.getTracks().forEach(track => track.stop());
+    }
+    if (this.streamingSource?.video) {
+      this.streamingSource.video.srcObject = null;
+    }
+    this.streamingSource = null;
+    this.selectedSourceId = null; // Clear the stored source ID
+    console.log('Screen share stopped');
   }
 
   onFrame(callback) {
@@ -289,25 +324,55 @@ class ScreenCapture {
         let buffer;
         
         if (this.selectedBackend === 'screenshare') {
-            // Get a fresh capture for screenshare
-            const sources = await desktopCapturer.getSources({
-                types: ['screen', 'window'],
-                thumbnailSize: { width: 1280, height: 720 }
-            });
-
-            const source = sourceId ? 
-                sources.find(s => s.id === sourceId) : 
-                sources[0];
-
-            if (!source) {
-                throw new Error('Source not found');
+            // If we have an active stream, capture from it
+            if (this.streamingSource && this.streamingSource.video) {
+                const video = this.streamingSource.video;
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Wait for video to be ready
+                if (video.videoWidth === 0 || video.videoHeight === 0) {
+                    await new Promise(resolve => {
+                        video.addEventListener('loadedmetadata', resolve, { once: true });
+                    });
+                }
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+                
+                buffer = await new Promise(resolve => {
+                    canvas.toBlob(blob => {
+                        blob.arrayBuffer().then(buffer => resolve(Buffer.from(buffer)));
+                    }, 'image/png');
+                });
+            } else {
+                // If no active stream, we need a source ID
+                if (!sourceId && !this.selectedSourceId) {
+                    throw new Error('No active stream. Please call startScreenShare(sourceId) first or provide a sourceId parameter.');
+                }
+                
+                // Use provided sourceId or fall back to stored one
+                const targetSourceId = sourceId || this.selectedSourceId;
+                await this.startScreenShare(targetSourceId, 1);
+                
+                // Recursive call after stream is started
+                return await this.captureBottomLeft(targetSourceId);
             }
-
-            buffer = source.thumbnail.toPNG();
         } else if (this.selectedBackend === 'electron') {
-            buffer = sourceId ? 
-                await this.captureWithElectron(sourceId) :
-                await this.captureWithElectron();
+            if (sourceId) {
+                const sources = await desktopCapturer.getSources({
+                    types: ['screen', 'window'],
+                    thumbnailSize: { width: 3840, height: 2160 }
+                });
+                const selectedSource = sources.find(s => s.id === sourceId);
+                if (!selectedSource) {
+                    throw new Error('Selected source not found');
+                }
+                buffer = selectedSource.thumbnail.toPNG();
+            } else {
+                buffer = await this.captureWithElectron();
+            }
         } else {
             buffer = await this.captureWithNativeTools();
         }

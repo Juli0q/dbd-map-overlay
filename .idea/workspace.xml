@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (FULLY WORKING 2)">
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (SCREEN SHARE)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapTranslator.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapTranslator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/screendetection/screenshotCapture.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/screenshotCapture.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -295,7 +295,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758009965117</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="TEMP COMMIT (SCREEN SHARE)">
+      <option name="closed" value="true" />
+      <created>1758015167040</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1758015167040</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -342,6 +350,7 @@
     <MESSAGE value="TEMP COMMIT (WORKING 5)" />
     <MESSAGE value="TEMP COMMIT (FULLY WORKING)" />
     <MESSAGE value="TEMP COMMIT (FULLY WORKING 2)" />
-    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (FULLY WORKING 2)" />
+    <MESSAGE value="TEMP COMMIT (SCREEN SHARE)" />
+    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (SCREEN SHARE)" />
   </component>
 </project>

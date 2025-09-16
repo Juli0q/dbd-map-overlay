@@ -155,7 +155,8 @@ function createWindow() {
         height: 600,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            enableRemoteModule: true
         },
         title: "DBD Map Overlay",
         icon: path.join(__dirname, "build", "icon.png"),
