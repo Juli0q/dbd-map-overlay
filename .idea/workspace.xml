@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (FULLY WORKING)">
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (FULLY WORKING 2)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapDetectionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapDetectionService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/translations/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/translations/en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screendetection/mapTranslator.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapTranslator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screendetection/screenshotCapture.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/screenshotCapture.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -280,7 +279,23 @@
       <option name="project" value="LOCAL" />
       <updated>1757960294281</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="TEMP COMMIT (FULLY WORKING 2)">
+      <option name="closed" value="true" />
+      <created>1758009960200</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1758009960200</updated>
+    </task>
+    <task id="LOCAL-00027" summary="TEMP COMMIT (FULLY WORKING 2)">
+      <option name="closed" value="true" />
+      <created>1758009965117</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1758009965117</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -326,6 +341,7 @@
     <MESSAGE value="TEMP COMMIT (WORKING 4)" />
     <MESSAGE value="TEMP COMMIT (WORKING 5)" />
     <MESSAGE value="TEMP COMMIT (FULLY WORKING)" />
-    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (FULLY WORKING)" />
+    <MESSAGE value="TEMP COMMIT (FULLY WORKING 2)" />
+    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (FULLY WORKING 2)" />
   </component>
 </project>

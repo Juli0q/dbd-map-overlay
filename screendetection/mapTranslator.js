@@ -1,4 +1,3 @@
-
 const fs = require('fs').promises;
 const path = require('path');
 const fuzz = require('fuzzball');
@@ -8,6 +7,94 @@ class MapTranslator {
     this.translations = new Map();
     this.loadedLanguages = new Set();
     this.settings = settingsManager;
+    this.matchLogFile = path.join(__dirname, 'logs', 'match-success.log');
+    this.ensureLogDirectory();
+  }
+
+  async ensureLogDirectory() {
+    try {
+      const logDir = path.dirname(this.matchLogFile);
+      await fs.mkdir(logDir, { recursive: true });
+    } catch (error) {
+      console.error('Failed to create logs directory:', error);
+    }
+  }
+
+  async logSuccessfulMatch(matchType, inputString, matchedWith, matchPosition, score, method, threshold) {
+    const timestamp = new Date().toISOString();
+    const logEntry = {
+      timestamp,
+      matchType, // 'MAP' or 'FINISH'
+      inputString: inputString.trim(),
+      normalizedInput: this.normalizeOCRText(inputString),
+      matchedWith,
+      matchPosition: matchPosition || 'N/A',
+      score: parseFloat(score.toFixed(4)),
+      method,
+      threshold: parseFloat(threshold.toFixed(4)),
+      success: true
+    };
+
+    const logLine = `[${timestamp}] ${matchType} MATCH SUCCESS\n` +
+                   `  Input: "${inputString.trim()}"\n` +
+                   `  Normalized: "${logEntry.normalizedInput}"\n` +
+                   `  Matched with: "${matchedWith}"\n` +
+                   `  Match position: ${matchPosition || 'Full string'}\n` +
+                   `  Score: ${logEntry.score} (threshold: ${logEntry.threshold})\n` +
+                   `  Method: ${method}\n` +
+                   `  Raw data: ${JSON.stringify(logEntry)}\n` +
+                   `${'='.repeat(80)}\n\n`;
+
+    try {
+      await fs.appendFile(this.matchLogFile, logLine, 'utf8');
+    } catch (error) {
+      console.error('Failed to write to match log file:', error);
+    }
+  }
+
+  findMatchPosition(inputString, matchedString, method) {
+    const normalizedInput = this.normalizeOCRText(inputString);
+    const normalizedMatch = matchedString.toLowerCase();
+
+    // For different matching methods, try to identify where the match occurred
+    switch (method) {
+      case 'partial':
+        // Find the best substring match
+        let bestPos = -1;
+        let bestScore = 0;
+        for (let i = 0; i <= normalizedInput.length - normalizedMatch.length; i++) {
+          const substring = normalizedInput.substring(i, i + normalizedMatch.length);
+          const score = fuzz.ratio(substring, normalizedMatch);
+          if (score > bestScore) {
+            bestScore = score;
+            bestPos = i;
+          }
+        }
+        return bestPos >= 0 ? `Position ${bestPos}-${bestPos + normalizedMatch.length}` : 'Not found';
+      
+      case 'word_match':
+        // Find which words matched
+        const inputWords = normalizedInput.split(/\s+/);
+        const matchWords = normalizedMatch.split(/\s+/);
+        const matchedWords = [];
+        
+        matchWords.forEach(matchWord => {
+          inputWords.forEach((inputWord, index) => {
+            if (fuzz.partial_ratio(inputWord, matchWord) > 80) {
+              matchedWords.push(`"${inputWord}" (word ${index + 1})`);
+            }
+          });
+        });
+        
+        return matchedWords.length > 0 ? `Words: ${matchedWords.join(', ')}` : 'Word boundary match';
+      
+      case 'token_sort':
+      case 'token_set':
+        return 'Token-based match (reordered words)';
+      
+      default:
+        return 'Full string comparison';
+    }
   }
 
   async loadLanguage(language) {
@@ -47,6 +134,9 @@ class MapTranslator {
     
     // Take the best score from all methods
     const bestScore = Math.max(ratioScore, partialRatio, tokenSort, tokenSet);
+    let bestMethod = ratioScore === bestScore ? 'ratio' : 
+                    partialRatio === bestScore ? 'partial' : 
+                    tokenSort === bestScore ? 'token_sort' : 'token_set';
     
     console.log(`Finish detection scores for "${finishKeyword}":`, {
       text: normalizedText,
@@ -58,7 +148,23 @@ class MapTranslator {
       threshold: finishConfidence
     });
 
-    return bestScore >= finishConfidence;
+    const isMatch = bestScore >= finishConfidence;
+    
+    // Log successful matches
+    if (isMatch) {
+      const matchPosition = this.findMatchPosition(detectedText, finishKeyword, bestMethod);
+      await this.logSuccessfulMatch(
+        'FINISH',
+        detectedText,
+        finishKeyword,
+        matchPosition,
+        bestScore,
+        bestMethod,
+        finishConfidence
+      );
+    }
+
+    return isMatch;
   }
 
   async translateToMapKey(detectedText, language) {
@@ -73,6 +179,7 @@ class MapTranslator {
     let bestMatch = null;
     let bestScore = 0;
     let bestMethod = '';
+    let bestMapName = '';
 
     // Try fuzzy matching against all map names
     for (const [mapName, mapKey] of Object.entries(maps)) {
@@ -96,19 +203,20 @@ class MapTranslator {
       // Take the best score from all methods
       const currentBestScore = Math.max(ratioScore, partialRatio, tokenSort, tokenSet, wordMatchScore * 0.9);
       
-      console.log(`Map matching scores for "${mapName}":`, {
-        text: normalizedText,
-        ratio: ratioScore,
-        partial: partialRatio,
-        tokenSort: tokenSort,
-        tokenSet: tokenSet,
-        wordMatch: wordMatchScore,
-        best: currentBestScore
-      });
+      //console.log(`Map matching scores for "${mapName}":`, {
+      //  text: normalizedText,
+      //  ratio: ratioScore,
+      //  partial: partialRatio,
+      //  tokenSort: tokenSort,
+      //  tokenSet: tokenSet,
+      //  wordMatch: wordMatchScore,
+      //  best: currentBestScore
+      //});
       
       if (currentBestScore > bestScore && currentBestScore >= detectionConfidence) {
         bestScore = currentBestScore;
         bestMatch = mapKey;
+        bestMapName = mapName;
         bestMethod = currentBestScore === ratioScore ? 'ratio' : 
                     currentBestScore === partialRatio ? 'partial' : 
                     currentBestScore === tokenSort ? 'token_sort' : 
@@ -118,6 +226,18 @@ class MapTranslator {
 
     if (bestMatch) {
       console.log(`Best match: "${bestMatch}" with score ${bestScore} using method: ${bestMethod}`);
+      
+      // Log successful match with detailed information
+      const matchPosition = this.findMatchPosition(detectedText, bestMapName, bestMethod);
+      await this.logSuccessfulMatch(
+        'MAP',
+        detectedText,
+        `${bestMapName} (key: ${bestMatch})`,
+        matchPosition,
+        bestScore,
+        bestMethod,
+        detectionConfidence
+      );
     }
 
     return bestMatch;

@@ -1,5 +1,4 @@
-// screenshotCapture.js
-const { desktopCapturer } = require('electron');
+const { desktopCapturer, ipcMain } = require('electron');
 const { Jimp } = require('jimp');
 const { exec } = require('child_process');
 const { promisify } = require('util');
@@ -18,6 +17,9 @@ class ScreenCapture {
     this.isWayland = process.env.XDG_SESSION_TYPE === 'wayland';
     this.isLinux = os.platform() === 'linux';
     this.isWindows = os.platform() === 'win32';
+    this.streamingSource = null;
+    this.streamInterval = null;
+    this.frameCallback = null;
     
     // Screenshot backend configuration
     this.screenshotBackend = screenshotBackend;
@@ -31,6 +33,7 @@ class ScreenCapture {
     const backends = {
       'auto': 'Auto-detect based on desktop environment',
       'electron': 'Electron desktopCapturer (X11/Windows only)',
+      'screenshare': 'Electron Screen Share Stream',
       'spectacle': 'KDE Spectacle',
       'gnome-screenshot': 'GNOME Screenshot',
       'import': 'ImageMagick import',
@@ -41,11 +44,124 @@ class ScreenCapture {
     };
 
     if (this.isWindows) {
-      // On Windows, only electron works reliably
-      return { 'electron': backends['electron'] };
+      return { 
+        'electron': backends['electron'],
+        'screenshare': backends['screenshare']
+      };
     }
 
     return backends;
+  }
+
+  async listCaptureSources() {
+    const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        thumbnailSize: { width: 384, height: 216 }, // Smaller thumbnails for preview
+        fetchWindowIcons: true
+    });
+
+    return sources.map(source => ({
+        id: source.id,
+        name: source.name,
+        type: source.display_id ? 'screen' : 'window',
+        thumbnail: source.thumbnail.toDataURL(),
+        icon: source.appIcon?.toDataURL()
+    }));
+  }
+
+  async selectSource(sourceId) {
+    if (this.streamingSource) {
+        this.stopScreenShare();
+    }
+
+    const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        thumbnailSize: { width: 3840, height: 2160 }
+    });
+
+    const selectedSource = sources.find(s => s.id === sourceId);
+    if (!selectedSource) {
+        throw new Error('Selected source not found');
+    }
+
+    this.streamingSource = selectedSource;
+    console.log(`Selected capture source: ${selectedSource.name}`);
+    
+    return this.streamingSource;
+  }
+
+  async startScreenShare(sourceId = null, fps = 1) {
+    if (this.streamingSource) {
+        this.stopScreenShare();
+    }
+
+    // Initial source setup - only request permissions once
+    const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        thumbnailSize: { width: 1280, height: 720 }
+    });
+
+    if (sources.length === 0) {
+        throw new Error('No sources available');
+    }
+
+    const selectedSource = sourceId ? 
+        sources.find(s => s.id === sourceId) :
+        sources[0];
+
+    if (!selectedSource) {
+        throw new Error('Selected source not found');
+    }
+
+    // Store source ID for refreshing
+    this.streamingSourceId = selectedSource.id;
+    this.streamingSource = selectedSource;
+    console.log(`Screen share started for: ${this.streamingSource.name}`);
+
+    const capture = async () => {
+        if (!this.streamInterval) return;
+
+        try {
+            // Only refresh the thumbnail of existing source
+            const buffer = await this.cropWithJimp(this.streamingSource.thumbnail.toPNG());
+            
+            if (this.frameCallback) {
+                this.frameCallback(buffer);
+            }
+        } catch (error) {
+            // If thumbnail is stale, refresh the source without showing permission dialog
+            try {
+                const newSources = await desktopCapturer.getSources({
+                    types: ['screen', 'window'],
+                    thumbnailSize: { width: 1280, height: 720 }
+                });
+                this.streamingSource = newSources.find(s => s.id === this.streamingSourceId) || this.streamingSource;
+            } catch (refreshError) {
+                console.error('Failed to refresh source:', refreshError);
+            }
+        }
+
+        // Schedule next capture
+        if (this.streamInterval) {
+            setTimeout(capture, 1000 / fps);
+        }
+    };
+
+    this.streamInterval = true;
+    capture();
+  }
+
+  stopScreenShare() {
+      this.streamInterval = false;  // Stop the animation frame loop
+      this.streamingSource = null;
+      console.log('Screen share stopped');
+  }
+
+  onFrame(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('Callback must be a function');
+    }
+    this.frameCallback = callback;
   }
 
   detectDesktopEnvironment() {
@@ -138,25 +254,7 @@ class ScreenCapture {
     return commands[backend];
   }
 
-  async captureBottomLeft(displayId = 0) {
-    try {
-      let buffer;
-      
-      if (this.selectedBackend === 'electron') {
-        buffer = await this.captureWithElectron(displayId);
-      } else {
-        buffer = await this.captureWithNativeTools();
-      }
-      
-      console.log('Screenshot captured successfully');
-      return await this.cropWithJimp(buffer);
-    } catch (error) {
-      console.error('Desktop capture failed:', error);
-      throw error;
-    }
-  }
-
-  async captureWithElectron(displayId = 0) {
+   async captureWithElectron(displayId = 0) {
     if (this.isWayland) {
       throw new Error('Electron desktopCapturer is not supported on Wayland');
     }
@@ -184,6 +282,42 @@ class ScreenCapture {
     
     console.log(`Using screenshot from display: ${source.name}`);
     return screenshot.toPNG();
+  }
+
+  async captureBottomLeft(sourceId = null) {
+    try {
+        let buffer;
+        
+        if (this.selectedBackend === 'screenshare') {
+            // Get a fresh capture for screenshare
+            const sources = await desktopCapturer.getSources({
+                types: ['screen', 'window'],
+                thumbnailSize: { width: 1280, height: 720 }
+            });
+
+            const source = sourceId ? 
+                sources.find(s => s.id === sourceId) : 
+                sources[0];
+
+            if (!source) {
+                throw new Error('Source not found');
+            }
+
+            buffer = source.thumbnail.toPNG();
+        } else if (this.selectedBackend === 'electron') {
+            buffer = sourceId ? 
+                await this.captureWithElectron(sourceId) :
+                await this.captureWithElectron();
+        } else {
+            buffer = await this.captureWithNativeTools();
+        }
+        
+        console.log('Screenshot captured successfully');
+        return await this.cropWithJimp(buffer);
+    } catch (error) {
+        console.error('Desktop capture failed:', error);
+        throw error;
+    }
   }
 
   async captureWithNativeTools() {
@@ -287,6 +421,10 @@ class ScreenCapture {
   setBackend(backend) {
     if (!this.availableBackends[backend]) {
       throw new Error(`Backend '${backend}' is not available. Available backends: ${Object.keys(this.availableBackends).join(', ')}`);
+    }
+    
+    if (this.streamingSource && backend !== 'screenshare') {
+      this.stopScreenShare();
     }
     
     this.screenshotBackend = backend;
