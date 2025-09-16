@@ -6,6 +6,7 @@ const { promisify } = require('util');
 const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
+const ScreenshareCapture = require('./screenshareCapture');
 
 const execAsync = promisify(exec);
 
@@ -24,6 +25,11 @@ class ScreenCapture {
     this.availableBackends = this.getAvailableBackends();
     this.selectedBackend = this.determineBackend();
     
+    // Initialize screenshare service for electron-screenshare backend
+    if (this.selectedBackend === 'electron-screenshare') {
+      this.screenshareService = new ScreenshareCapture();
+    }
+    
     console.log(`Screenshot backend: ${this.selectedBackend}`);
   }
 
@@ -31,6 +37,7 @@ class ScreenCapture {
     const backends = {
       'auto': 'Auto-detect based on desktop environment',
       'electron': 'Electron desktopCapturer (X11/Windows only)',
+      'electron-screenshare': 'Electron Screen Share API (All platforms)',
       'spectacle': 'KDE Spectacle',
       'gnome-screenshot': 'GNOME Screenshot',
       'import': 'ImageMagick import',
@@ -41,8 +48,11 @@ class ScreenCapture {
     };
 
     if (this.isWindows) {
-      // On Windows, only electron works reliably
-      return { 'electron': backends['electron'] };
+      // On Windows, both electron and electron-screenshare work
+      return { 
+        'electron': backends['electron'],
+        'electron-screenshare': backends['electron-screenshare']
+      };
     }
 
     return backends;
@@ -94,33 +104,21 @@ class ScreenCapture {
 
     // Auto-detection logic
     if (this.isWindows) {
-      return 'electron';
+      // On Windows, prefer electron-screenshare for consistent permissions
+      return 'electron-screenshare';
     }
     
     if (!this.isLinux) {
-      return 'electron';
+      return 'electron-screenshare';
     }
 
-    // For X11, prefer electron if available
-    if (!this.isWayland) {
-      return 'electron';
+    // For Wayland, always use electron-screenshare for single permission popup
+    if (this.isWayland) {
+      return 'electron-screenshare';
     }
 
-    // For Wayland, detect desktop environment and choose appropriate tool
-    const de = this.detectDesktopEnvironment();
-    
-    const deBackends = {
-      'kde': 'spectacle',
-      'gnome': 'gnome-screenshot',
-      'xfce': 'xfce4-screenshooter',
-      'lxde': 'scrot',
-      'mate': 'mate-screenshot',
-      'cinnamon': 'gnome-screenshot',
-      'budgie': 'gnome-screenshot',
-      'i3': 'scrot'
-    };
-
-    return deBackends[de] || 'spectacle'; // Default fallback
+    // For X11, prefer electron for performance, but electron-screenshare is also available
+    return 'electron';
   }
 
   getScreenshotCommand(backend, tempFile) {
@@ -144,6 +142,22 @@ class ScreenCapture {
       
       if (this.selectedBackend === 'electron') {
         buffer = await this.captureWithElectron(displayId);
+      } else if (this.selectedBackend === 'electron-screenshare') {
+        try {
+          buffer = await this.captureWithScreenshare();
+        } catch (screenshareError) {
+          console.warn('Screenshare capture failed, falling back to electron method:', screenshareError.message);
+          
+          // Fallback to electron capture if screenshare fails
+          if (!this.isWayland) {
+            console.log('Falling back to electron desktopCapturer method');
+            buffer = await this.captureWithElectron(displayId);
+          } else {
+            // On Wayland, try native tools as fallback
+            console.log('Falling back to native screenshot tools');
+            buffer = await this.captureWithNativeTools();
+          }
+        }
       } else {
         buffer = await this.captureWithNativeTools();
       }
@@ -257,6 +271,20 @@ class ScreenCapture {
     return await croppedImage.getBuffer('image/png');
   }
 
+  async captureWithScreenshare() {
+    if (!this.screenshareService) {
+      this.screenshareService = new ScreenshareCapture();
+    }
+
+    try {
+      const buffer = await this.screenshareService.captureFrame();
+      return buffer;
+    } catch (error) {
+      console.error('Screenshare capture failed:', error);
+      throw error;
+    }
+  }
+
   async captureAndSave(outputPath) {
     const buffer = await this.captureBottomLeft();
     await fs.writeFile(outputPath, buffer);
@@ -274,13 +302,20 @@ class ScreenCapture {
   // Get current screenshot method info
   getScreenshotInfo() {
     const detectedDE = this.detectDesktopEnvironment();
-    return {
+    const info = {
       platform: os.platform(),
       isWayland: this.isWayland,
       detectedDE: detectedDE,
       selectedBackend: this.selectedBackend,
       availableBackends: this.availableBackends
     };
+
+    // Add screenshare service info if available
+    if (this.screenshareService) {
+      info.screenshareStatus = 'Service initialized';
+    }
+
+    return info;
   }
 
   // Change screenshot backend
@@ -289,9 +324,56 @@ class ScreenCapture {
       throw new Error(`Backend '${backend}' is not available. Available backends: ${Object.keys(this.availableBackends).join(', ')}`);
     }
     
+    // Cleanup existing screenshare service if switching backends
+    if (this.screenshareService && backend !== 'electron-screenshare') {
+      this.screenshareService.stop().catch(err => 
+        console.warn('Error stopping screenshare service:', err.message)
+      );
+      this.screenshareService = null;
+    }
+    
     this.screenshotBackend = backend;
     this.selectedBackend = this.determineBackend();
+    
+    // Initialize new screenshare service if needed
+    if (this.selectedBackend === 'electron-screenshare' && !this.screenshareService) {
+      this.screenshareService = new ScreenshareCapture();
+    }
+    
     console.log(`Screenshot backend changed to: ${this.selectedBackend}`);
+  }
+
+  // Get screenshare service status
+  async getScreenshareStatus() {
+    if (!this.screenshareService) {
+      return { available: false, error: 'Screenshare service not initialized' };
+    }
+
+    try {
+      return await this.screenshareService.getStatus();
+    } catch (error) {
+      return { available: false, error: error.message };
+    }
+  }
+
+  // Stop screenshare service
+  async stopScreenshare() {
+    if (this.screenshareService) {
+      try {
+        await this.screenshareService.stop();
+        console.log('Screenshare service stopped');
+      } catch (error) {
+        console.error('Error stopping screenshare service:', error);
+      }
+    }
+  }
+
+  // Cleanup all resources
+  async cleanup() {
+    await this.stopScreenshare();
+    this.screenshareService = null;
+    this.clearCache();
+    console.log('ScreenCapture cleanup completed');
   }
 }
 

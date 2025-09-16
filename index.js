@@ -155,7 +155,10 @@ function createWindow() {
         height: 600,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            webSecurity: false, // Required for getDisplayMedia API
+            enableRemoteModule: true,
+            allowRunningInsecureContent: true // Required for some media APIs
         },
         title: "DBD Map Overlay",
         icon: path.join(__dirname, "build", "icon.png"),
@@ -463,6 +466,55 @@ function createWindow() {
         }
     });
 
+    // Screenshare-specific IPC handlers
+    ipcMain.handle('screenshare:getStatus', async (event) => {
+        try {
+            const status = await mapDetectionService.screenCapture.getScreenshareStatus();
+            return { success: true, status };
+        } catch (error) {
+            console.error('Failed to get screenshare status:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('screenshare:initialize', async (event) => {
+        try {
+            if (mapDetectionService.screenCapture.selectedBackend === 'electron-screenshare') {
+                await mapDetectionService.screenCapture.screenshareService?.initialize();
+                return { success: true };
+            } else {
+                return { success: false, error: 'Screenshare backend not selected' };
+            }
+        } catch (error) {
+            console.error('Failed to initialize screenshare:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('screenshare:stop', async (event) => {
+        try {
+            await mapDetectionService.screenCapture.stopScreenshare();
+            return { success: true };
+        } catch (error) {
+            console.error('Failed to stop screenshare:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('screenshare:captureFrame', async (event) => {
+        try {
+            if (mapDetectionService.screenCapture.selectedBackend === 'electron-screenshare') {
+                const buffer = await mapDetectionService.screenCapture.captureWithScreenshare();
+                return { success: true, buffer: buffer.toString('base64') };
+            } else {
+                return { success: false, error: 'Screenshare backend not selected' };
+            }
+        } catch (error) {
+            console.error('Failed to capture screenshare frame:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
     win.on("closed", () => {
         if (overlayWindow !== null && !overlayWindow.isDestroyed()) {
             overlayWindow.close()
@@ -609,8 +661,17 @@ app.on('window-all-closed', (w) => {
     }
 })
 
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
     if (tray) {
         tray.destroy();
+    }
+    
+    // Cleanup map detection service and screenshare
+    try {
+        if (mapDetectionService) {
+            await mapDetectionService.cleanup();
+        }
+    } catch (error) {
+        console.error('Error during cleanup:', error);
     }
 });

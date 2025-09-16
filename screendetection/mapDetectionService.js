@@ -411,6 +411,12 @@ class MapDetectionService {
   async cleanup() {
     this.stopContinuousDetection();
     await this.ocrProcessor.cleanup();
+    
+    // Cleanup screen capture
+    if (this.screenCapture && typeof this.screenCapture.cleanup === 'function') {
+      await this.screenCapture.cleanup();
+    }
+    
     console.log('Map detection service cleaned up');
   }
 }

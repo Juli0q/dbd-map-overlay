@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (FULLY WORKING)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapDetectionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapDetectionService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/translations/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/translations/en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,7 +15,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="map-detection" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -51,7 +48,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "map-detection",
+    "git-widget-placeholder": "map-detection-before-screenshare",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "/home/julian/Development/Repos/IONNetwork/dbd-map-overlay",
     "settings.editor.selected.configurable": "preferences.pluginManager",
@@ -294,7 +291,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="map-detection" />
+                        <option value="map-detection-before-screenshare" />
                       </list>
                     </value>
                   </entry>
