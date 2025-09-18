@@ -309,9 +309,17 @@
 
                             <!-- Advanced Settings Collapse -->
                             <div class="mb-3">
+                                <button class="btn btn-outline-primary d-none" type="button" id="changeSourceBtn">
+                                    Change source
+                                </button>
                                 <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedMapDetectionSettings" aria-expanded="false" aria-controls="advancedMapDetectionSettings">
                                     Advanced Settings
                                 </button>
+
+                                <div id="screen-share-preview-container">
+                                    <h3>Screen Capture Preview</h3>
+                                    <video width="320" height="240" autoplay></video>
+                                </div>
                             </div>
                             
                             <div class="collapse" id="advancedMapDetectionSettings">

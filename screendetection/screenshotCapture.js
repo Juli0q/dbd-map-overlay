@@ -31,6 +31,7 @@ class ScreenCapture {
     const backends = {
       'auto': 'Auto-detect based on desktop environment',
       'electron': 'Electron desktopCapturer (X11/Windows only)',
+      'electron-screenshare': 'Electron screen share',
       'spectacle': 'KDE Spectacle',
       'gnome-screenshot': 'GNOME Screenshot',
       'import': 'ImageMagick import',

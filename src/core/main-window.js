@@ -86,7 +86,8 @@ class MainWindow {
             height: 600,
             webPreferences: {
                 nodeIntegration: true,
-                contextIsolation: false
+                contextIsolation: false,
+                enableRemoteModule: false,
             },
             title: "DBD Map Overlay",
             icon: path.join(global.dirname, "build", "icon.png"),

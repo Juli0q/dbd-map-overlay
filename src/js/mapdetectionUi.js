@@ -1,3 +1,5 @@
+const ScreenShareRenderer = require('./screenShareRenderer');
+
 // Map Detection UI Logic (without context isolation)
 class MapDetectionUI {
     constructor(settings, images) {
@@ -7,7 +9,11 @@ class MapDetectionUI {
         this.settings = settings;
         this.availableBackends = {};
         this.images = images;
+        const screenShareRenderer = new ScreenShareRenderer();
+
         this.setupEventListeners();
+
+
         
         // Only load settings if settings object is valid
         if (this.settings && typeof this.settings.get === 'function') {
@@ -132,7 +138,8 @@ class MapDetectionUI {
         try {
             const info = await this.ipcRenderer.invoke('get-screenshot-info');
             const infoBadge = document.getElementById('screenshotBackendInfo');
-            
+
+            this.updateScreenshareUi(info)
             if (infoBadge) {
                 const backendName = this.availableBackends[info.selectedBackend] || info.selectedBackend;
                 infoBadge.textContent = `Current: ${backendName}`;
@@ -144,6 +151,18 @@ class MapDetectionUI {
             }
         } catch (error) {
             console.error('Failed to update backend info:', error);
+        }
+    }
+
+    updateScreenshareUi(info) {
+        let screenshareContainer = document.getElementById("screen-share-preview-container");
+        // Show or hide the "Change Source" button based on backend and platform
+        if (info && info.isWayland && info.selectedBackend === "electron-screenshare") {
+            document.getElementById("changeSourceBtn").classList.remove("d-none")
+            screenshareContainer.classList.remove("d-none");
+        } else {
+            document.getElementById("changeSourceBtn").classList.add("d-none")
+            screenshareContainer.classList.add("d-none");
         }
     }
 
@@ -215,6 +234,10 @@ class MapDetectionUI {
 
         document.getElementById('testProcessPattern')?.addEventListener('click', async () => {
             await this.testProcessPattern();
+        });
+
+        document.getElementById('changeSourceBtn').addEventListener('click', async (e) => {
+            screenShareRenderer.startCapture()
         });
 
         document.getElementById('showRunningProcesses')?.addEventListener('click', async () => {

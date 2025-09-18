@@ -11,6 +11,7 @@ const Hotkeys = require("./js/hotkeys.js")
 const Options = require("./js/options.js");
 const StreamDeck = require("./js/streamdeck.js");
 const MapDetectionUI = require("./js/mapdetectionUi.js")
+const ScreenShareRenderer = require("./js/screenShareRenderer.js")
 
 let timeoutHide = null;
 ipcRenderer.on("update-message", async (event, message) => {
@@ -89,6 +90,12 @@ const custom = new Custom(images);
  * @type {StreamDeck}
  */
 const streamDeck = new StreamDeck(images);
+
+/**
+ * ScreenShareRenderer instance for handling screen sharing functionality.
+ * @type {ScreenShareRenderer}
+ */
+const screenShareRenderer = new ScreenShareRenderer();
 
 document.addEventListener('DOMContentLoaded', async function () {
     await images.remoteUpdateImages()
