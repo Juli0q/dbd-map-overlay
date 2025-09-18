@@ -8,8 +8,10 @@ const Settings = require("./src/core/settings");
 const UserData = require("./src/core/user-data");
 const TrayController = require("./src/core/tray");
 const StreamDeck = require("./src/core/stream-deck");
+const SettingsManager = require('./settingsManager');
 
-const gotLock = app.requestSingleInstanceLock();
+let settingsManager = null;
+
 
 if (!gotLock) {
     if (process.argv.length <= 1) {
@@ -41,6 +43,7 @@ const hotkeys = new Hotkeys(mainWindow);
 const userData = new UserData();
 const trayController = new TrayController(mainWindow);
 const streamDeck = new StreamDeck();
+const mapDetectionService = new MapDetectionService(settingsManager);
 
 if (gotLock) {
     app.on('second-instance', (event, argv, workingDirectory) => {
@@ -63,9 +66,19 @@ function createWindow() {
     trayController.create()
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     if (gotLock) {
         createWindow()
+
+        global.mainWindow = mainWindow;
+
+        try {
+            await mapDetectionService.initialize();
+            console.log('Map detection service initialized');
+        } catch (error) {
+            console.error('Failed to initialize map detection service:', error);
+        }
+
         app.on('activate', () => {
             if (BrowserWindow.getAllWindows().length === 0) {
                 createWindow()
