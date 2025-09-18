@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="TEMP COMMIT (FULLY WORKING)">
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/mapDetectionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/mapDetectionService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/screendetection/translations/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/translations/en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,9 +49,10 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "map-detection",
+    "git-widget-placeholder": "map-detection-second-self",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "/home/julian/Development/Repos/IONNetwork/dbd-map-overlay",
+    "node.js.selected.package.tslint": "(autodetect)",
     "settings.editor.selected.configurable": "preferences.pluginManager",
     "to.speed.mode.migration.done": "true",
     "vcs.patch.to.clipboard": "true"

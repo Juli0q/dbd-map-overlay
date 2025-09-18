@@ -9,8 +9,9 @@ const UserData = require("./src/core/user-data");
 const TrayController = require("./src/core/tray");
 const StreamDeck = require("./src/core/stream-deck");
 const SettingsManager = require('./settingsManager');
+const MapDetectionService = require('./screendetection/mapDetectionService');
 
-let settingsManager = null;
+const gotLock = app.requestSingleInstanceLock();
 
 
 if (!gotLock) {
@@ -43,6 +44,7 @@ const hotkeys = new Hotkeys(mainWindow);
 const userData = new UserData();
 const trayController = new TrayController(mainWindow);
 const streamDeck = new StreamDeck();
+const settingsManager = new SettingsManager()
 const mapDetectionService = new MapDetectionService(settingsManager);
 
 if (gotLock) {
