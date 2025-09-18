@@ -142,9 +142,11 @@ class ScreenCapture {
   async captureBottomLeft(displayId = 0) {
     try {
       let buffer;
-      
+
       if (this.selectedBackend === 'electron') {
         buffer = await this.captureWithElectron(displayId);
+      } else if (this.selectedBackend === 'electron-screenshare') {
+          buffer = await this.takeStreamCapture()
       } else {
         buffer = await this.captureWithNativeTools();
       }
@@ -155,6 +157,10 @@ class ScreenCapture {
       console.error('Desktop capture failed:', error);
       throw error;
     }
+  }
+
+  async takeStreamCapture() {
+
   }
 
   async captureWithElectron(displayId = 0) {

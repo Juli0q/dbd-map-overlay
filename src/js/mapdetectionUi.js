@@ -1,15 +1,14 @@
-const ScreenShareRenderer = require('./screenShareRenderer');
+
 
 // Map Detection UI Logic (without context isolation)
 class MapDetectionUI {
-    constructor(settings, images) {
+    constructor(settings, images, screenShareRenderer) {
         this.isDetecting = false;
         this.testMode = false;
         this.ipcRenderer = require('electron').ipcRenderer;
         this.settings = settings;
         this.availableBackends = {};
         this.images = images;
-        const screenShareRenderer = new ScreenShareRenderer();
 
         this.setupEventListeners();
 

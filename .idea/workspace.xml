@@ -4,13 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/js/screenShareRenderer.js" afterDir="false" />
+    <list default="true" id="e4c4aace-63cb-41cd-8e1a-f9d26aab1d91" name="Changes" comment="Implement screen sharing functionality with preview and capture options">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/screendetection/screenshotCapture.js" beforeDir="false" afterPath="$PROJECT_DIR$/screendetection/screenshotCapture.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/main-window.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/main-window.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/js/mapdetectionUi.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/js/mapdetectionUi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/js/screenShareRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/js/screenShareRenderer.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/renderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -291,7 +290,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757960294281</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Implement screen sharing functionality with preview and capture options">
+      <option name="closed" value="true" />
+      <created>1758202637839</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1758202637839</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -305,7 +312,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="map-detection" />
+                        <option value="map-detection-second-self" />
                       </list>
                     </value>
                   </entry>
@@ -337,6 +344,7 @@
     <MESSAGE value="TEMP COMMIT (WORKING 4)" />
     <MESSAGE value="TEMP COMMIT (WORKING 5)" />
     <MESSAGE value="TEMP COMMIT (FULLY WORKING)" />
-    <option name="LAST_COMMIT_MESSAGE" value="TEMP COMMIT (FULLY WORKING)" />
+    <MESSAGE value="Implement screen sharing functionality with preview and capture options" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implement screen sharing functionality with preview and capture options" />
   </component>
 </project>

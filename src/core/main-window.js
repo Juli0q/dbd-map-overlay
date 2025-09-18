@@ -1,4 +1,4 @@
-const {BrowserWindow, app, shell, ipcMain, screen} = require("electron");
+const {BrowserWindow, app, shell, ipcMain, screen, session, desktopCapturer} = require("electron");
 const path = require("path");
 const {autoUpdater} = require("electron-updater");
 const fs = require("fs");
@@ -116,6 +116,12 @@ class MainWindow {
             return false;
         });
         this.window.loadFile('src/index.html')
+
+        session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+            desktopCapturer.getSources({ types: ['window'] }).then((sources) => {
+                callback({ video: sources[0], audio: 'loopback' });
+            });
+        }, { useSystemPicker: true });
 
 
         this.window.webContents.setWindowOpenHandler(({url}) => {

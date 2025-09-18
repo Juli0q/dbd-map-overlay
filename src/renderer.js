@@ -56,6 +56,12 @@ const hotkeys = new Hotkeys(images);
 const lobby = new Lobby(api, settings, images);
 images.setLobby(lobby);
 
+/**
+ * ScreenShareRenderer instance for handling screen sharing functionality.
+ * @type {ScreenShareRenderer}
+ */
+const screenShareRenderer = new ScreenShareRenderer();
+
 // Wait for settings to be initialized before creating Options
 let options;
 let mapDetectionUI;
@@ -67,7 +73,7 @@ settings.init().then(() => {
     options = new Options(settings, images);
     images.setOptions(options);
     images.init().then(() => {
-        mapDetectionUI = new MapDetectionUI(settings, images);
+        mapDetectionUI = new MapDetectionUI(settings, images, screenShareRenderer);
     })
     
 });
@@ -90,12 +96,6 @@ const custom = new Custom(images);
  * @type {StreamDeck}
  */
 const streamDeck = new StreamDeck(images);
-
-/**
- * ScreenShareRenderer instance for handling screen sharing functionality.
- * @type {ScreenShareRenderer}
- */
-const screenShareRenderer = new ScreenShareRenderer();
 
 document.addEventListener('DOMContentLoaded', async function () {
     await images.remoteUpdateImages()

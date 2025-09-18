@@ -18,18 +18,13 @@ class ScreenShareRenderer {
     }
 
     async startCapture() {
-        try {
-            this.stream = await navigator.mediaDevices.getDisplayMedia({
-                video: { mediaSource: 'screen' },
-                audio: false
-            });
+        this.stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { mediaSource: 'screen' },
+            audio: false
+        });
 
-            this.videoElement.srcObject = this.stream;
-            this.showStatus('Screen capture started successfully!');
-        } catch (error) {
-            console.error('Error starting capture:', error);
-            this.showStatus('Failed to start screen capture. Please try again.');
-        }
+        this.videoElement.srcObject = this.stream;
+        this.showStatus('Screen capture started successfully!');
     }
 
     stopCapture() {
@@ -40,6 +35,17 @@ class ScreenShareRenderer {
             this.showStatus('Screen capture stopped.');
         }
     }
+
+    registerIpcListeners() {
+        ipcRenderer.on('take-screenshot', (event, arg) => {
+            takeScreenshot()
+        });
+    }
+
+    showStatus(message) {
+        console.log(message);
+    }
+
 
     takeScreenshot() {
         if (!this.videoElement || !this.stream) {
