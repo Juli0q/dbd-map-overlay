@@ -1,5 +1,5 @@
 // screenshotCapture.js
-const { desktopCapturer } = require('electron');
+const { desktopCapturer, ipcMain } = require('electron');
 const { Jimp } = require('jimp');
 const { exec } = require('child_process');
 const { promisify } = require('util');
@@ -146,7 +146,7 @@ class ScreenCapture {
       if (this.selectedBackend === 'electron') {
         buffer = await this.captureWithElectron(displayId);
       } else if (this.selectedBackend === 'electron-screenshare') {
-          buffer = await this.takeStreamCapture()
+          buffer = await this.captureElectronScreenshare();
       } else {
         buffer = await this.captureWithNativeTools();
       }
@@ -159,8 +159,20 @@ class ScreenCapture {
     }
   }
 
-  async takeStreamCapture() {
-
+  async captureElectronScreenshare() {
+    try {
+      if (global.mainWindow && global.mainWindow.webContents) {
+        const buffer = await global.mainWindow.webContents.send('take-stream-screenshot');
+        console.log(buffer)
+        console.log('Screenshot captured successfully via screen share');
+        return await this.cropWithJimp(buffer);
+      } else {
+        console.error('mainWindow not available');
+      }
+    } catch (error) {
+      console.log(error.message)
+      throw new Error('Error while getting screenshot', error);
+    }
   }
 
   async captureWithElectron(displayId = 0) {

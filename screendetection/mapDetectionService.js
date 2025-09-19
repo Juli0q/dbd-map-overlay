@@ -8,13 +8,13 @@ const path = require('path');
 const { finished } = require('stream');
 
 class MapDetectionService {
-  constructor(settingsManager) {
+  constructor(settingsManager, mainWindow) {
     if (!settingsManager) {
       throw new Error('SettingsManager is required for MapDetectionService');
     }
     
     this.settings = settingsManager; // Use the injected settings manager
-    this.screenCapture = new ScreenCapture();
+    this.screenCapture = new ScreenCapture(mainWindow);
     this.ocrProcessor = new OCRProcessor();
     this.mapTranslator = new MapTranslator(this.settings);
     this.processMonitor = new ProcessMonitor();

@@ -10,6 +10,7 @@ const TrayController = require("./src/core/tray");
 const StreamDeck = require("./src/core/stream-deck");
 const SettingsManager = require('./settingsManager');
 const MapDetectionService = require('./screendetection/mapDetectionService');
+const { main } = require('@popperjs/core');
 
 const gotLock = app.requestSingleInstanceLock();
 
@@ -45,7 +46,7 @@ const userData = new UserData();
 const trayController = new TrayController(mainWindow);
 const streamDeck = new StreamDeck();
 const settingsManager = new SettingsManager()
-const mapDetectionService = new MapDetectionService(settingsManager);
+const mapDetectionService = new MapDetectionService(settingsManager, mainWindow);
 
 if (gotLock) {
     app.on('second-instance', (event, argv, workingDirectory) => {
@@ -72,7 +73,7 @@ app.whenReady().then(async () => {
     if (gotLock) {
         createWindow()
 
-        global.mainWindow = mainWindow;
+        global.mainWindow = mainWindow.window;
 
         try {
             await mapDetectionService.initialize();

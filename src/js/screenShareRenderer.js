@@ -15,6 +15,7 @@ class ScreenShareRenderer {
         console.log("screenShareRenderer::init::called");
         this.videoElement = document.querySelector('video');
         this.screenshotPreview = document.getElementById('screenshotPreview');
+        this.registerIpcListeners();
     }
 
     async startCapture() {
@@ -37,8 +38,9 @@ class ScreenShareRenderer {
     }
 
     registerIpcListeners() {
-        ipcRenderer.on('take-screenshot', (event, arg) => {
-            takeScreenshot()
+        ipcRenderer.on('take-stream-screenshot', async () => {
+            console.log("Taking stream screenshot...")
+            return await this.takeScreenshot()
         });
     }
 
@@ -47,41 +49,76 @@ class ScreenShareRenderer {
     }
 
 
-    takeScreenshot() {
+    async takeScreenshot(saveToDisk = false) {
         if (!this.videoElement || !this.stream) {
             this.showStatus('Please start screen capture first!');
-            return;
+            return null;
         }
 
-        if (this.videoElement.videoWidth === 0 || this.videoElement.videoHeight === 0) {
-            this.showStatus('Video not ready yet. Try again in a moment.');
-            return;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = this.videoElement.videoWidth;
+        canvas.height = this.videoElement.videoHeight;
+        
+        ctx.drawImage(this.videoElement, 0, 0);
+        
+        if (saveToDisk) {
+            this.saveScreenshotToDisk(canvas);
+            return null;
+        } else {
+            let returnValue = await this.getScreenshotBuffer(canvas);
+            return returnValue;
         }
+    }
 
-        try {
-            // Create canvas to capture video frame
-            const canvas = document.createElement('canvas');
+    getScreenshotBuffer(canvas = null) {
+        if (!canvas) {
+            if (!this.videoElement || !this.stream) {
+                this.showStatus('Please start screen capture first!');
+                return null;
+            }
+            
+            canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-
-            // Set canvas dimensions to match video
             canvas.width = this.videoElement.videoWidth;
             canvas.height = this.videoElement.videoHeight;
-
-            // Draw current video frame to canvas
-            ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
-
-            // Convert to data URL
-            const dataURL = canvas.toDataURL('image/png');
-
-            // Show preview
-            this.screenshotPreview.src = dataURL;
-
-            // Save the screenshot
-            this.saveScreenshot(dataURL);
-        } catch (error) {
-            console.error('Error taking screenshot:', error);
-            this.showStatus('Failed to take screenshot. Please try again.');
+            ctx.drawImage(this.videoElement, 0, 0);
         }
+        
+        // Return buffer that Jimp can read
+        return new Promise((resolve) => {
+            canvas.toBlob((blob) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(Buffer.from(reader.result));
+                reader.readAsArrayBuffer(blob);
+            }, 'image/png');
+        });
+    }
+
+    saveScreenshotToDisk(canvas = null) {
+        if (!canvas) {
+            if (!this.videoElement || !this.stream) {
+                this.showStatus('Please start screen capture first!');
+                return;
+            }
+            
+            canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = this.videoElement.videoWidth;
+            canvas.height = this.videoElement.videoHeight;
+            ctx.drawImage(this.videoElement, 0, 0);
+        }
+        
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `screenshot-${Date.now()}.png`;
+            a.click();
+            URL.revokeObjectURL(url);
+            this.showStatus('Screenshot saved to downloads!');
+        }, 'image/png');
     }
 
     // Save screenshot using IPC to main process

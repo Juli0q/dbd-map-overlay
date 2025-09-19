@@ -162,6 +162,7 @@ class MapDetectionUI {
         } else {
             document.getElementById("changeSourceBtn").classList.add("d-none")
             screenshareContainer.classList.add("d-none");
+            screenShareRenderer.stopCapture()
         }
     }
 
